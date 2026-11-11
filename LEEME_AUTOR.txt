@@ -1,0 +1,17 @@
+﻿================================================================================
+ PROTOBRIDGE STUDIO v1.0 - TRADUCTOR BIDIRECCIONAL TÁCTICO EN TIEMPO REAL
+================================================================================
+ Autor y Arquitecto : Jhon Córdova Martínez
+ Alias / Marca      : CRESKO
+ GitHub Oficial     : https://github.com/MCJ-A
+ LinkedIn           : https://www.linkedin.com/in/jhon-cordova-martinez
+ Edición            : Cresko Tactical Edition (Win64 / WASAPI / CUDA)
+================================================================================
+
+INSTRUCCIONES RÁPIDAS PARA NUEVOS USUARIOS:
+1. Extrae este archivo ZIP en cualquier carpeta de tu PC.
+2. Haz doble clic en "Instalar_ProtoBridge.bat".
+3. El instalador detectará automáticamente tu tarjeta gráfica, instalará el
+   cable de audio virtual, descargará los modelos óptimos para tu PC y creará
+   el acceso directo "ProtoBridge Studio" en tu Escritorio.
+================================================================================

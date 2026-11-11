@@ -1,0 +1,65 @@
+Set-Location -LiteralPath "C:\Users\jhonc\Desktop\ProtoBridge"
+
+# 1. Sanitización de archivo accidental fuera del repo
+$accidental = "C:\Users\jhonc\Instalar_ProtoBridge.bat"
+if (Test-Path -LiteralPath $accidental) {
+    Remove-Item -LiteralPath $accidental -Force
+    Write-Host "[OK] Eliminado: $accidental" -ForegroundColor Yellow
+}
+
+# 2. Generación de README.md (UTF-8 sin BOM)
+$readmeContent = @'
+<div align="center">
+
+# ⚡ ProtoBridge Studio v1.0
+### Real-Time Full-Duplex Tactical Voice Translator & 3D Spatial Diarization Engine for Windows
+
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![CUDA Accelerated](https://img.shields.io/badge/CUDA-RTX%20Accelerated%20(INT8__FP16)-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
+[![ONNX Runtime](https://img.shields.io/badge/ONNX%20Runtime-Silero%20%7C%20CAM%2B%2B%20%7C%20Kokoro-005CED?style=for-the-badge&logo=onnx&logoColor=white)](https://onnxruntime.ai/)
+[![WASAPI Low-Latency](https://img.shields.io/badge/Audio-WASAPI%20Loopback%20%2B%20SPSC%20Shm-FF6F00?style=for-the-badge)](https://learn.microsoft.com/en-us/windows/win32/coreaudio/wasapi)
+[![License: MIT](https://img.shields.io/badge/License-MIT-10B981?style=for-the-badge)](./LICENSE)
+
+**Desarrollado por [Jhon Córdova Martínez (Cresko)](https://www.linkedin.com/in/jhon-cordova-martinez) · [GitHub @MCJ-A](https://github.com/MCJ-A)**
+
+*Traducción bidireccional simultánea de voz a voz (< 800 ms de latencia extremo a extremo), ejecutada 100% en local sobre GPU/CPU sin APIs en la nube, con preservación de timbre/género por hablante y posicionamiento espacial 3D para videojuegos tácticos cooperativos (Helldivers 2, Squad, Arma, Escape from Tarkov).*
+
+</div>
+
+---
+
+## 🎯 El Problema de Ingeniería
+
+En simuladores tácticos y juegos cooperativos, la comunicación por voz de baja latencia es crítica:
+1. **Colisión Acústica y Doble Voz:** Escuchar el idioma original del escuadrón encima de la traducción sintetizada destruye la inteligibilidad.
+2. **Pérdida de Identidad en Múltiples Hablantes:** Cuando varios compañeros hablan distintos idiomas simultáneamente, un TTS convencional usa una única voz plana, impidiendo distinguir quién dio la orden.
+3. **Bloqueo del Hilo de Audio:** La inferencia pesada en el mismo proceso de captura provoca dropouts y glitches en Windows WASAPI.
+
+**ProtoBridge Studio** resuelve estos problemas combinando **memoria compartida libre de bloqueos (Lock-Free SPSC RingBuffer)**, **enrutamiento de políticas de audio de Windows (IPolicyConfig COM)** y una **tubería neuronal híbrida GPU + CPU**.
+
+---
+
+## 🏗️ Arquitectura del Sistema Full-Duplex
+
+```mermaid
+flowchart LR
+    subgraph FLOW1["🎙️ FLUJO 1: Voz Saliente (Micrófono -> Juego)"]
+        M1["Micrófono Físico\n(WASAPI 48kHz)"] --> RB1["Lock-Free SPSC RingBuffer\n(SharedMemory 300ms Pre-Roll)"]
+        RB1 --> VAD1["Silero VAD v5\n(ONNX CPU)"]
+        VAD1 --> STT1["Faster-Whisper Turbo\n(CUDA INT8_FP16)"]
+        STT1 --> MT1["NLLB-200 600M\n(CTranslate2 INT8 + Glosario Táctico)"]
+        MT1 --> TTS1["Kokoro-82M v1.0\n(ONNX Neural TTS)"]
+        TTS1 --> VB["VB-Cable Input\n(Micrófono Virtual del Juego)"]
+    end
+
+    subgraph FLOW2["🎧 FLUJO 2: Escuadrón Entrante (Juego -> Audífonos 3D)"]
+        LB["Endpoint Loopback Aislado\n(eCommunications Sink)"] --> RB2["Lock-Free SPSC RingBuffer\n(SharedMemory 300ms Pre-Roll)"]
+        RB2 --> VAD2["Silero VAD v5\n(ONNX CPU)"]
+        VAD2 --> SPK["WeSpeaker CAM++ + F0 Pitch\n(Clustering Coseno Online)"]
+        VAD2 --> STT2["Faster-Whisper Auto-Lang\n(EN / FR / PT / IT / DE -> Texto)"]
+        STT2 --> MT2["NLLB-200 600M\n(Traducción -> Español)"]
+        SPK --> VM["Asignador Dinámico de Timbre\ny Panorámica Estéreo 3D"]
+        MT2 --> TTS2["Kokoro-82M Multi-Voz\n(Mezcla Vectorial de Estilo)"]
+        VM --> TTS2
+        TTS2 --> HP["Audífonos Físicos\n(paneo L / L-C / R-C / R)"]
+    end

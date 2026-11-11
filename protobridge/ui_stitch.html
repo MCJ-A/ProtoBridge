@@ -1,0 +1,672 @@
+﻿<!DOCTYPE html>
+<html class="h-full select-none" lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ProtoBridge Studio v1.0 - Traductor Bidireccional Táctico en Tiempo Real</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet"/>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tactical: {
+              bg: '#0A0E14',
+              surface: '#0F1621',
+              panel: '#131C2A',
+              border: '#1E2D42',
+              borderBright: '#2C4260',
+              amber: '#F59E0B',
+              orange: '#FF5722',
+              cyan: '#00E5FF',
+              blue: '#0284C7',
+              emerald: '#10B981',
+              red: '#EF4444'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'monospace'],
+            tactical: ['"Chakra Petch"', 'sans-serif'],
+            hud: ['"Rajdhani"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #090D12; }
+    ::-webkit-scrollbar-thumb { background: #1B283A; border-radius: 2px; border: 1px solid #273C58; }
+    ::-webkit-scrollbar-thumb:hover { background: #2D4363; }
+    .scanlines {
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+    }
+    .clip-corner-sm {
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    }
+  </style>
+</head>
+<body class="h-full bg-[#080C11] text-slate-200 font-tactical antialiased overflow-hidden flex flex-col justify-between border border-[#1A2636]">
+
+  <!-- BEGIN: AppMainHeader -->
+  <header class="bg-[#0B1017] border-b border-[#172333] px-5 py-3 flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-baseline space-x-2">
+        <svg class="w-5 h-5 text-amber-500 self-center mr-1" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+        </svg>
+        <h1 class="text-xl md:text-2xl font-bold tracking-wider text-amber-500 flex items-center gap-2">
+          PROTOBRIDGE <span class="text-slate-600 font-light">//</span> <span class="text-slate-100 font-semibold">TRADUCTOR TÁCTICO MULTIJUGADOR</span>
+        </h1>
+      </div>
+      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/40 text-[10px] font-mono tracking-widest text-red-400" id="statusBadge">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" id="statusIndicatorDot"></span>
+        <span class="font-bold" id="statusBadgeText">DETENIDO</span>
+      </div>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <button class="clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-[#00A86B] hover:bg-[#00c57d] text-black shadow-[0_0_15px_rgba(0,168,107,0.35)] border border-[#00ff9d]" id="mainToggleBtn" onclick="toggleEngineState()">
+        <span class="text-xs" id="btnIcon">▶</span>
+        <span id="btnLabel">ENCENDER PROTOBRIDGE</span>
+      </button>
+    </div>
+  </header>
+  <!-- END: AppMainHeader -->
+
+  <!-- BEGIN: NavigationTabs -->
+  <nav class="bg-[#090E14] border-b border-[#1A2638] px-4 pt-1 flex items-center space-x-1">
+    <button class="px-4 py-2 border-b-2 border-amber-500 text-amber-400 bg-[#121B27]/80 text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-live-cabin" onclick="switchTab('live-cabin')">
+      <span>🎙️</span> Cabina en Vivo &amp; Idiomas
+    </button>
+    <button class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-audio-buses" onclick="switchTab('audio-buses')">
+      <span>🎧</span> Buses de Audio &amp; Voces
+    </button>
+    <button class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-model-installer" onclick="switchTab('model-installer')">
+      <span>⬇️</span> Instalador de Modelos e Idiomas
+    </button>
+  </nav>
+  <!-- END: NavigationTabs -->
+
+  <!-- BEGIN: MainContentArea -->
+  <main class="flex-1 flex flex-col p-4 gap-3 bg-[#0B0F15] overflow-y-auto">
+
+    <!-- Tab View 1: Cabina en Vivo -->
+    <div class="flex flex-col gap-3 flex-1" id="view-live-cabin">
+      <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+        <!-- Stream 1: TX (My Mic -> Game) -->
+        <article class="bg-[#0E1520] border border-[#1C2C40] p-4 relative group">
+          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent"></div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#182333] mb-4">
+            <h2 class="text-sm font-bold tracking-wider text-amber-400 flex items-center gap-2">
+              <span class="w-2 h-2 bg-amber-500 rounded-sm"></span>
+              FLUJO 1: TU MICRÓFONO -&gt; JUEGO
+            </h2>
+            <span class="text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded">TX TRANSMISIÓN</span>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label class="text-slate-400 font-medium">Tú hablas en:</label>
+              <div class="w-full sm:w-2/3">
+                <select id="selMySrc" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
+                  <option value="es">Español (ES/LATAM)</option>
+                  <option value="auto">Detectar Automáticamente (Multi)</option>
+                  <option value="en">English (US/UK)</option>
+                  <option value="pt">Português (BR)</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="it">Italiano</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label class="text-slate-400 font-medium">El juego escucha en:</label>
+              <div class="w-full sm:w-2/3">
+                <select id="selMyTgt" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
+                  <option value="en">Inglés (English)</option>
+                  <option value="es">Español (Spanish)</option>
+                  <option value="pt">Português (BR)</option>
+                  <option value="fr">Français</option>
+                  <option value="it">Italiano</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-[#15202E] flex flex-wrap gap-4 text-xs">
+              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
+                <input id="chkMuteTx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-amber-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+                <span>Silenciar mi traducción (Mute TX)</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
+                <input id="chkMonitorTx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-amber-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+                <span>Escuchar mi traducción en mis cascos</span>
+              </label>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-[#15202E] font-mono text-[11px]">
+              <div class="flex justify-between items-center text-slate-400 mb-1">
+                <span>Nivel Mic: <strong class="text-amber-400 font-mono" id="micDbText">-100.0 dBFS</strong></span>
+                <span class="text-[10px] text-slate-500" id="lblMicHwTag">WASAPI 16kHz DSP</span>
+              </div>
+              <div class="w-full bg-[#080B10] h-3.5 border border-[#1A283B] p-0.5 flex gap-0.5 overflow-hidden">
+                <div class="flex-1 flex gap-0.5" id="micVuBars"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 flex justify-between mt-0.5 px-0.5">
+                <span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>-6</span><span>0 dB</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Stream 2: RX (Teammates -> Your Headphones) -->
+        <article class="bg-[#0E1520] border border-[#1C2C40] p-4 relative group">
+          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-blue-500 to-transparent"></div>
+          <div class="flex items-center justify-between pb-3 border-b border-[#182333] mb-4">
+            <h2 class="text-sm font-bold tracking-wider text-cyan-400 flex items-center gap-2">
+              <span class="w-2 h-2 bg-cyan-500 rounded-sm"></span>
+              FLUJO 2: COMPAÑEROS -&gt; TUS AURICULARES (3D)
+            </h2>
+            <span class="text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2 py-0.5 rounded">RX RECEPCIÓN</span>
+          </div>
+
+          <div class="space-y-3.5 text-xs">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label class="text-slate-400 font-medium">Idioma compañeros:</label>
+              <div class="w-full sm:w-2/3">
+                <select id="selTeamSrc" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
+                  <option value="auto">Detectar Automáticamente (Multi)</option>
+                  <option value="en">English (North America / EU)</option>
+                  <option value="pt">Português (BR)</option>
+                  <option value="fr">Français</option>
+                  <option value="de">Deutsch</option>
+                  <option value="ru">Русский (Russian)</option>
+                  <option value="es">Español</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <label class="text-slate-400 font-medium">Traducir para mí a:</label>
+              <div class="w-full sm:w-2/3">
+                <select id="selTeamTgt" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
+                  <option value="es">Español</option>
+                  <option value="en">English (US)</option>
+                  <option value="pt">Português</option>
+                  <option value="fr">Français</option>
+                  <option value="it">Italiano</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="pt-2 border-t border-[#15202E] flex flex-wrap gap-4 text-xs">
+              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
+                <input id="chkMuteRx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-cyan-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+                <span>Silenciar traducción de compañeros (Mute RX)</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
+                <input id="chkSpatial3D" checked onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-cyan-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+                <span>Espacialización HRTF 3D activa</span>
+              </label>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-[#15202E] font-mono text-[11px]">
+              <div class="flex justify-between items-center text-slate-400 mb-1">
+                <span>Nivel Chat: <strong class="text-cyan-400 font-mono" id="chatDbText">-100.0 dBFS</strong></span>
+                <span class="text-[10px] text-slate-500">CANAL LOOPBACK AISLADO</span>
+              </div>
+              <div class="w-full bg-[#080B10] h-3.5 border border-[#1A283B] p-0.5 flex gap-0.5 overflow-hidden">
+                <div class="flex-1 flex gap-0.5" id="chatVuBars"></div>
+              </div>
+              <div class="text-[10px] text-slate-500 flex justify-between mt-0.5 px-0.5">
+                <span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>-6</span><span>0 dB</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <!-- BEGIN: SquadronRadarHUD -->
+      <section class="bg-[#0B1017] border border-[#182535] px-4 py-2.5 flex flex-wrap items-center justify-between text-xs font-mono">
+        <div class="flex items-center gap-2 text-indigo-300 font-semibold tracking-wide">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+          RADAR DE ESCUADRÓN 3D:
+        </div>
+        <div class="flex flex-wrap gap-4 mt-2 sm:mt-0 text-[11px]">
+          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
+            <span>[</span>
+            <span class="text-cyan-400">◀ #1 IZQ:</span>
+            <span class="text-slate-500" id="pos-left-status">Inactivo</span>
+            <span>]</span>
+          </div>
+          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
+            <span>[</span>
+            <span class="text-amber-400">▲ #2 CENTRO:</span>
+            <span class="text-slate-500" id="pos-center-status">Inactivo</span>
+            <span>]</span>
+          </div>
+          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
+            <span>[</span>
+            <span class="text-emerald-400">▶ #3 DER:</span>
+            <span class="text-slate-500" id="pos-right-status">Inactivo</span>
+            <span>]</span>
+          </div>
+        </div>
+      </section>
+      <!-- END: SquadronRadarHUD -->
+
+      <!-- BEGIN: TelemetryAndLogTerminal -->
+      <section class="bg-[#080C12] border border-[#182333] flex flex-col flex-1 min-h-[210px]">
+        <div class="bg-[#0C121A] px-3 py-2 border-b border-[#182333] flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+              <path clip-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3 1a1 1 0 000 2h10a1 1 0 100-2H5zm0 4a1 1 0 000 2h6a1 1 0 100-2H5z" fill-rule="evenodd"></path>
+            </svg>
+            <span class="text-xs font-mono font-bold tracking-wider text-amber-400">REGISTRO DE TRADUCCIÓN Y LATENCIA EN VIVO</span>
+          </div>
+          <div class="flex items-center space-x-2 text-[11px] font-mono">
+            <button class="px-2 py-0.5 bg-[#121A26] hover:bg-[#1B2738] border border-[#223348] text-slate-300 rounded" onclick="clearConsoleLog()">
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div class="p-3 font-mono text-xs leading-relaxed overflow-y-auto flex-1 scanlines select-text space-y-1" id="terminalLogContainer">
+          <div class="text-amber-400/90">[SISTEMA] ProtoBridge Studio listo. Presiona ENCENDER PROTOBRIDGE para iniciar los motores.</div>
+        </div>
+
+        <div class="bg-[#070B0F] border-t border-[#15202E] px-3 py-1.5 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400">
+          <div class="flex items-center space-x-4">
+            <span class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              GPU: <span class="text-slate-200">NVIDIA GeForce RTX 5060</span>
+            </span>
+            <span>VRAM MOTOR: <span class="text-amber-400">~0.42 GB / 8.0 GB</span></span>
+            <span>ÚLTIMA LATENCIA: <span class="text-cyan-400" id="lblLatencyMetric">-- ms</span></span>
+          </div>
+          <div class="flex items-center space-x-3 text-slate-500">
+            <span>TTS: <span class="text-slate-300">Kokoro-82M INT8</span></span>
+            <span>MT: <span class="text-slate-300">NLLB-200</span></span>
+            <span class="text-emerald-500 font-semibold">CUDA INT8_FLOAT16</span>
+          </div>
+        </div>
+      </section>
+      <!-- END: TelemetryAndLogTerminal -->
+    </div>
+
+    <!-- Tab View 2: Buses de Audio & Voces -->
+    <div class="hidden flex-col gap-4 flex-1" id="view-audio-buses">
+      <div class="bg-[#0E1520] border border-[#1C2C40] p-5">
+        <h3 class="text-sm font-bold text-cyan-400 tracking-wider mb-2">ENRUTAMIENTO DE DISPOSITIVOS VIRTUALES (WASAPI / VB-CABLE)</h3>
+        <p class="text-xs text-slate-400 mb-4">Configura los buses físicos y virtuales verificados en tu Windows para aislar las voces de los jugadores del sonido del juego.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-amber-400 font-semibold block mb-1.5">1. Tu Micrófono Físico (Flujo 1 Entrada):</label>
+            <select id="selDevMic" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
+          </div>
+
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-cyan-400 font-semibold block mb-1.5">2. Cable Virtual Hacia el Juego (VB-Cable Input):</label>
+            <select id="selDevCableA" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
+          </div>
+
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-emerald-400 font-semibold block mb-1.5">3. Tus Auriculares Físicos (ROG Theta / Salida 3D):</label>
+            <select id="selDevHp" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
+          </div>
+
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-indigo-400 font-semibold block mb-1.5">4. Bus Loopback Chat de Compañeros (Flujo 2 In):</label>
+            <select id="selDevTeam" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
+          </div>
+
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-amber-400 font-semibold block mb-1.5">5. Tu Perfil de Voz Sintética (TTS Salida):</label>
+            <select id="selVoiceProfile" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded">
+              <option value="am_adam">Adam (Inglés US - Masculino Táctico)</option>
+              <option value="am_michael">Michael (Inglés US - Masculino Grave)</option>
+              <option value="bm_george">George (Inglés UK - Masculino Británico)</option>
+              <option value="bf_emma">Emma (Inglés UK - Femenina)</option>
+              <option value="em_alex">Alex (Español - Masculino Tenor)</option>
+              <option value="em_santa">Santa (Español - Masculino Barítono)</option>
+              <option value="ef_dora">Dora (Español - Femenina)</option>
+            </select>
+          </div>
+
+          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
+            <label class="text-cyan-400 font-semibold block mb-1.5">6. Modelo GPU Faster-Whisper (RTX 5060):</label>
+            <select id="selWhisperModel" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded">
+              <option value="tiny">tiny (~150 MB VRAM - Ultra Rápido)</option>
+              <option value="small">small (~420 MB VRAM - Recomendado RTX 5060)</option>
+              <option value="large-v3-turbo">large-v3-turbo (~1.1 GB VRAM - Máxima Precisión)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3 bg-[#080D14] border border-[#1E2D40] rounded flex items-center justify-between text-xs font-mono">
+          <span class="text-slate-300">7. Velocidad de Voz Traducida: <strong class="text-amber-400" id="lblSpeedVal">1.14x</strong></span>
+          <input id="rngSpeed" type="range" min="1.00" max="1.30" step="0.02" value="1.14" oninput="document.getElementById('lblSpeedVal').textContent = this.value + 'x'" class="w-64 accent-amber-500"/>
+        </div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <button onclick="saveFullConfig()" class="clip-corner-sm px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-wider uppercase">
+            💾 GUARDAR CONFIGURACIÓN EN DISCO
+          </button>
+          <button onclick="triggerBackendAction('open_mmsys')" class="px-4 py-2 bg-[#162232] hover:bg-[#1E2E42] border border-[#2A405C] text-slate-200 text-xs font-mono rounded">
+            🔊 Abrir Panel de Sonido de Windows (mmsys.cpl)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab View 3: Instalador de Modelos -->
+    <div class="hidden flex-col gap-4 flex-1" id="view-model-installer">
+      <div class="bg-[#0E1520] border border-[#1C2C40] p-5">
+        <h3 class="text-sm font-bold text-emerald-400 tracking-wider mb-2">GESTOR DE MODELOS LOCALES OFFLINE E IDIOMAS</h3>
+        <p class="text-xs text-slate-400 mb-4">Pesos neuronales cuantizados (CTranslate2 INT8 + ONNX Runtime) para traducción en tiempo real sin suscripciones.</p>
+
+        <div class="space-y-2.5 font-mono text-xs" id="modelsStatusList"></div>
+
+        <div class="mt-5 flex flex-wrap gap-3">
+          <button onclick="triggerBackendAction('download_models')" class="clip-corner-sm px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-black font-bold text-xs tracking-wider uppercase">
+            ⬇️ VERIFICAR / DESCARGAR TODOS LOS MODELOS E IDIOMAS
+          </button>
+          <button onclick="triggerBackendAction('install_vbcable')" class="px-4 py-2 bg-[#162232] hover:bg-[#1E2E42] border border-[#2A405C] text-slate-200 text-xs font-mono rounded">
+            🔌 Reinstalar Driver VB-Cable (Administrador)
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  <!-- END: MainContentArea -->
+
+  <!-- BEGIN: BottomStatusBar -->
+  <footer class="bg-[#06090D] border-t border-[#131D2A] px-4 py-1.5 flex items-center justify-between text-[11px] font-mono text-slate-500 select-none">
+        <div class="flex items-center space-x-3">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+      <span class="text-slate-300 font-semibold">By CRESKO (Jhon Córdova)</span>
+      <span>|</span>
+      <button onclick="triggerBackendAction('open_github')" class="text-cyan-400 hover:text-cyan-300 underline cursor-pointer">GitHub @MCJ-A</button>
+      <span>|</span>
+      <button onclick="triggerBackendAction('open_linkedin')" class="text-amber-400 hover:text-amber-300 underline cursor-pointer">LinkedIn</button>
+    </div>
+    <div class="flex items-center space-x-4">
+      <span class="text-slate-400">Internal DSP Clock: 16000 Hz</span>
+      <span class="text-slate-400">VAD Frame: 512 samples (32ms)</span>
+      <span class="text-amber-500">SPSC RINGBUFFER OK</span>
+    </div>
+  </footer>
+  <!-- END: BottomStatusBar -->
+
+  <script>
+    let isRunning = false;
+    let lastLogIndex = 0;
+    let initialLoaded = false;
+
+    function initVuBars(containerId, count = 28) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'flex-1 h-full bg-[#182333] transition-colors duration-75';
+        bar.id = `${containerId}-bar-${i}`;
+        container.appendChild(bar);
+      }
+    }
+
+    function updateMeterFromDb(containerId, textId, dbValue, activeHex) {
+      const count = 28;
+      const clampedDb = Math.max(-60.0, Math.min(0.0, dbValue));
+      const ratio = (dbValue <= -59.5) ? 0.0 : (clampedDb + 60.0) / 60.0;
+      const activeCount = Math.floor(ratio * count);
+      const textElem = document.getElementById(textId);
+      if (textElem) textElem.textContent = `${dbValue.toFixed(1)} dBFS`;
+
+      for (let i = 0; i < count; i++) {
+        const bar = document.getElementById(`${containerId}-bar-${i}`);
+        if (!bar) continue;
+        if (i < activeCount) {
+          if (i > count * 0.85) bar.style.backgroundColor = '#ef4444';
+          else if (i > count * 0.65) bar.style.backgroundColor = '#fbbf24';
+          else bar.style.backgroundColor = activeHex;
+        } else {
+          bar.style.backgroundColor = '#182333';
+        }
+      }
+    }
+
+    function applyVisualRunningState(running, loading) {
+      isRunning = running;
+      const btn = document.getElementById('mainToggleBtn');
+      const btnLabel = document.getElementById('btnLabel');
+      const btnIcon = document.getElementById('btnIcon');
+      const statusBadge = document.getElementById('statusBadge');
+      const statusText = document.getElementById('statusBadgeText');
+      const statusDot = document.getElementById('statusIndicatorDot');
+
+      if (loading) {
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-700/60 bg-amber-950/40 text-[10px] font-mono tracking-widest text-amber-400';
+        statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+        statusText.textContent = 'CARGANDO IA...';
+        btnLabel.textContent = 'INICIALIZANDO...';
+        return;
+      }
+
+      if (running) {
+        btn.className = 'clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-red-600 hover:bg-red-500 text-white border border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+        btnIcon.textContent = '■';
+        btnLabel.textContent = 'DETENER PROTOBRIDGE';
+
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-emerald-900/60 bg-emerald-950/40 text-[10px] font-mono tracking-widest text-emerald-400';
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        statusText.textContent = 'ACTIVO EN LÍNEA';
+      } else {
+        btn.className = 'clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-[#00A86B] hover:bg-[#00c57d] text-black shadow-[0_0_15px_rgba(0,168,107,0.35)] border border-[#00ff9d]';
+        btnIcon.textContent = '▶';
+        btnLabel.textContent = 'ENCENDER PROTOBRIDGE';
+
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/40 text-[10px] font-mono tracking-widest text-red-400';
+        statusDot.className = 'w-2 h-2 rounded-full bg-red-500 animate-pulse';
+        statusText.textContent = 'DETENIDO';
+      }
+    }
+
+    async function toggleEngineState() {
+      await saveFullConfig(true);
+      await fetch('/api/toggle', { method: 'POST' });
+    }
+
+    function addLogEntry(message, type = 'slate') {
+      const container = document.getElementById('terminalLogContainer');
+      if (!container) return;
+      const line = document.createElement('div');
+      if (type === 'emerald' || type === 'rx') line.className = 'text-emerald-400 font-semibold';
+      else if (type === 'cyan' || type === 'tx') line.className = 'text-cyan-400';
+      else if (type === 'amber' || type === 'sys') line.className = 'text-amber-400/90';
+      else if (type === 'red' || type === 'err') line.className = 'text-red-500 font-bold';
+      else line.className = 'text-slate-300';
+
+      line.textContent = message;
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function clearConsoleLog() {
+      const container = document.getElementById('terminalLogContainer');
+      if (container) {
+        container.innerHTML = '';
+        addLogEntry('[SISTEMA] Registro reiniciado.', 'sys');
+      }
+    }
+
+    function switchTab(tabId) {
+      const tabs = ['live-cabin', 'audio-buses', 'model-installer'];
+      tabs.forEach(id => {
+        const btn = document.getElementById(`tab-${id}`);
+        const view = document.getElementById(`view-${id}`);
+        if (id === tabId) {
+          btn.className = 'px-4 py-2 border-b-2 border-amber-500 text-amber-400 bg-[#121B27]/80 text-xs font-semibold tracking-wider flex items-center gap-2 transition-all';
+          if (view) view.classList.remove('hidden');
+          if (view) view.classList.add('flex');
+        } else {
+          btn.className = 'px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all';
+          if (view) view.classList.add('hidden');
+          if (view) view.classList.remove('flex');
+        }
+      });
+    }
+
+    function fillSelect(selId, options, selectedVal) {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '';
+      options.forEach(opt => {
+        const o = document.createElement('option');
+        o.value = opt;
+        o.textContent = opt;
+        sel.appendChild(o);
+      });
+      if (selectedVal && options.includes(selectedVal)) {
+        sel.value = selectedVal;
+      }
+    }
+
+    async function pushLiveConfig() {
+      await saveFullConfig(true);
+    }
+
+    async function saveFullConfig(silent = false) {
+      const payload = {
+        my_source_lang: document.getElementById('selMySrc').value,
+        my_target_lang: document.getElementById('selMyTgt').value,
+        teammate_source_lang: document.getElementById('selTeamSrc').value,
+        teammate_target_lang: document.getElementById('selTeamTgt').value,
+        mute_tx: document.getElementById('chkMuteTx').checked,
+        monitor_own_voice: document.getElementById('chkMonitorTx').checked,
+        mute_rx: document.getElementById('chkMuteRx').checked,
+        spatial_3d: document.getElementById('chkSpatial3D').checked,
+        mic_device_name: document.getElementById('selDevMic').value,
+        cable_a_device_name: document.getElementById('selDevCableA').value,
+        headphones_device_name: document.getElementById('selDevHp').value,
+        team_loopback_device_name: document.getElementById('selDevTeam').value,
+        my_voice_profile: document.getElementById('selVoiceProfile').value,
+        whisper_model_size: document.getElementById('selWhisperModel').value,
+        tts_speed_in: parseFloat(document.getElementById('rngSpeed').value || '1.14'),
+        silent: silent
+      };
+      await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+
+    async function triggerBackendAction(actionName) {
+      await fetch('/api/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: actionName })
+      });
+    }
+
+    function renderModelsStatus(models) {
+      const container = document.getElementById('modelsStatusList');
+      if (!container || !models) return;
+      container.innerHTML = '';
+      models.forEach(m => {
+        const badgeClass = m.ready
+          ? 'px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] rounded'
+          : 'px-2 py-1 bg-amber-950 text-amber-400 border border-amber-800 text-[10px] rounded';
+        const row = document.createElement('div');
+        row.className = 'p-3 bg-[#080D14] border border-[#1E2D40] flex items-center justify-between';
+        row.innerHTML = `
+          <div>
+            <div class="text-slate-200 font-bold">${m.title}</div>
+            <div class="text-slate-500 text-[11px]">${m.subtitle}</div>
+          </div>
+          <span class="${badgeClass}">${m.ready ? 'LISTO' : 'PENDIENTE'}</span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    async function pollBackendState() {
+      try {
+        const res = await fetch(`/api/state?since=${lastLogIndex}`);
+        const data = await res.json();
+
+        applyVisualRunningState(data.running, data.loading);
+        updateMeterFromDb('micVuBars', 'micDbText', data.mic_db, '#f59e0b');
+        updateMeterFromDb('chatVuBars', 'chatDbText', data.chat_db, '#00e5ff');
+
+        if (data.last_latency_ms > 0) {
+          document.getElementById('lblLatencyMetric').textContent = `${data.last_latency_ms} ms`;
+        }
+
+        const posL = document.getElementById('pos-left-status');
+        const posC = document.getElementById('pos-center-status');
+        const posR = document.getElementById('pos-right-status');
+        if (posL) {
+          posL.textContent = data.radar.left;
+          posL.className = data.radar.left !== 'Inactivo' ? 'text-cyan-400 font-bold' : 'text-slate-500';
+        }
+        if (posC) {
+          posC.textContent = data.radar.center;
+          posC.className = data.radar.center !== 'Inactivo' ? 'text-amber-400 font-bold' : 'text-slate-500';
+        }
+        if (posR) {
+          posR.textContent = data.radar.right;
+          posR.className = data.radar.right !== 'Inactivo' ? 'text-emerald-400 font-bold' : 'text-slate-500';
+        }
+
+        if (data.logs && data.logs.length > 0) {
+          data.logs.forEach(item => {
+            addLogEntry(item.msg, item.tag);
+            lastLogIndex = item.id;
+          });
+        }
+
+        if (!initialLoaded && data.devices) {
+          initialLoaded = true;
+          fillSelect('selDevMic', data.devices.inputs, data.config.mic_device_name);
+          fillSelect('selDevCableA', data.devices.outputs, data.config.cable_a_device_name);
+          fillSelect('selDevHp', data.devices.outputs, data.config.headphones_device_name);
+          fillSelect('selDevTeam', data.devices.loopbacks, data.config.team_loopback_device_name);
+
+          document.getElementById('selMySrc').value = data.config.my_source_lang || 'es';
+          document.getElementById('selMyTgt').value = data.config.my_target_lang || 'en';
+          document.getElementById('selTeamSrc').value = data.config.teammate_source_lang || 'auto';
+          document.getElementById('selTeamTgt').value = data.config.teammate_target_lang || 'es';
+          document.getElementById('chkMuteTx').checked = !!data.config.mute_tx;
+          document.getElementById('chkMonitorTx').checked = !!data.config.monitor_own_voice;
+          document.getElementById('chkMuteRx').checked = !!data.config.mute_rx;
+          document.getElementById('selVoiceProfile').value = data.config.my_voice_profile || 'am_adam';
+          document.getElementById('selWhisperModel').value = data.config.whisper_model_size || 'small';
+          document.getElementById('rngSpeed').value = data.config.tts_speed_in || 1.14;
+          document.getElementById('lblSpeedVal').textContent = (data.config.tts_speed_in || 1.14) + 'x';
+        }
+
+        renderModelsStatus(data.models_status);
+      } catch (e) {}
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initVuBars('micVuBars', 28);
+      initVuBars('chatVuBars', 28);
+      pollBackendState();
+      setInterval(pollBackendState, 110);
+    });
+  </script>
+</body>
+</html>
+

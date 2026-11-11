@@ -1,0 +1,8 @@
+﻿numpy>=1.26.4
+PyAudioWPatch>=0.2.12.6
+soxr>=0.3.7
+onnxruntime>=1.20.1
+faster-whisper>=1.1.1
+nvidia-cublas-cu12
+nvidia-cudnn-cu12
+kokoro-onnx>=0.4.0

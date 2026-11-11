@@ -1,0 +1,22 @@
+﻿# Entornos virtuales y cachés de Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Pesos de Modelos IA (se descargan automáticamente con protobridge.auto_setup)
+models/
+*.onnx
+*.bin
+*.pt
+*.safetensors
+
+# Configuración local de usuario y artefactos temporales
+config.json
+logs/
+*.wav
+*.log
+.DS_Store
+Thumbs.db
