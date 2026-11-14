@@ -3,6 +3,7 @@
 from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs
 
 datas = [
+    ("ignait/assets", "ignait/assets"),
     ("ignait/ui_stitch.html", "ignait"),
     ("ignait/media/xtts_worker.py", "ignait/media"),
     ("browser_extension", "browser_extension"),
@@ -72,6 +73,7 @@ exe = EXE(
     strip=False,
     upx=False,
     console=False,
+    icon="ignait/assets/ignait.ico",
 )
 
 coll = COLLECT(

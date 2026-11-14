@@ -84,6 +84,51 @@ def _read_server_ws_frame(sock: socket.socket) -> tuple[int, bytes]:
 
 
 class TestMediaPipelineComponents(unittest.TestCase):
+    def setUp(self) -> None:
+        self._ci_patches: list[Any] = []
+        models_dir = get_models_dir()
+        missing_spk = not (models_dir / "wespeaker_campp.onnx").exists()
+        missing_vad = not (models_dir / "silero_vad.onnx").exists()
+        if missing_spk:
+            p1 = patch(
+                "ignait.diarization.speaker_id._ensure_speaker_model",
+                return_value=models_dir / "wespeaker_campp.onnx",
+            )
+            p1.start()
+            self._ci_patches.append(p1)
+        if missing_vad:
+            p2 = patch(
+                "ignait.vad.silero.ensure_silero_model",
+                return_value=models_dir / "silero_vad.onnx",
+            )
+            p2.start()
+            self._ci_patches.append(p2)
+        if missing_spk or missing_vad:
+            def _fake_ort_session(model_path: Any, *_args: Any, **_kwargs: Any) -> MagicMock:
+                sess = MagicMock()
+                if "silero" in str(model_path).lower():
+                    sess.get_inputs.return_value = []
+                    sess.run.return_value = (
+                        np.array([[0.0]], dtype=np.float32),
+                        np.zeros((2, 1, 64), dtype=np.float32),
+                        np.zeros((2, 1, 64), dtype=np.float32),
+                    )
+                else:
+                    inp0 = MagicMock()
+                    inp0.name = "feats"
+                    sess.get_inputs.return_value = [inp0]
+                    sess.run.return_value = [np.ones((1, 256), dtype=np.float32)]
+                return sess
+
+            p_ort = patch("onnxruntime.InferenceSession", side_effect=_fake_ort_session)
+            p_ort.start()
+            self._ci_patches.append(p_ort)
+
+    def tearDown(self) -> None:
+        for p in reversed(self._ci_patches):
+            p.stop()
+        self._ci_patches.clear()
+
     def test_ws_accept_key_and_binary_packet_roundtrip(self) -> None:
         self.assertEqual(
             compute_ws_accept_key("dGhlIHNhbXBsZSBub25jZQ=="),
@@ -424,6 +469,8 @@ class TestMediaPipelineComponents(unittest.TestCase):
         orig_cfg = AppConfig(**vars(CONTROLLER.config))
         sock: socket.socket | None = None
         try:
+            CONTROLLER.set_channel_mutes(mute_tx=False, mute_rx=False)
+            CONTROLLER._media_service.reset_speakers()
             fake_stt = MagicMock()
             fake_mt = MagicMock()
             long_translation = (
@@ -601,6 +648,8 @@ class TestMediaPipelineComponents(unittest.TestCase):
         orig_cfg = AppConfig(**vars(CONTROLLER.config))
         sock: socket.socket | None = None
         try:
+            CONTROLLER.set_channel_mutes(mute_tx=False, mute_rx=False)
+            CONTROLLER._media_service.reset_speakers()
             fake_stt = MagicMock()
             fake_mt = MagicMock()
             fake_mt.translate.return_value = "Buenos días a todos."
@@ -850,6 +899,9 @@ class TestMediaPipelineComponents(unittest.TestCase):
                         ).encode("utf-8"),
                     )
                 )
+                import time as _time
+
+                _time.sleep(0.05)
                 release_stale_mt.set()
 
                 # Petición rezagada con playback_gen viejo (0) debe ignorarse
@@ -1453,6 +1505,8 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
         orig_cfg = AppConfig(**vars(CONTROLLER.config))
         sock: socket.socket | None = None
         try:
+            CONTROLLER.set_channel_mutes(mute_tx=False, mute_rx=False)
+            CONTROLLER._media_service.reset_speakers()
             fake_stt = MagicMock()
             fake_stt.transcribe_any.return_value = ("Enemy spotted", "en", 0.99)
             fake_mt = MagicMock()

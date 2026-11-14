@@ -18,7 +18,9 @@ jobs:
       - name: Install Core Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy
-      - name: Run Lock-Free SPSC RingBuffer Unit Tests
+          pip install numpy PyAudioWPatch soxr onnxruntime faster-whisper kokoro-onnx ctranslate2 tokenizers huggingface-hub Pillow pytest
+          pip install -e . --no-deps
+      - name: Run Ignait Test Suite
         run: |
+          pytest -v
           python -m unittest discover -s tests -v

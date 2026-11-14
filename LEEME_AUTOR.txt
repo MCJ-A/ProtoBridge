@@ -1,17 +1,17 @@
 ================================================================================
- IGNAIT STUDIO v1.0 - TRADUCTOR BIDIRECCIONAL TÁCTICO EN TIEMPO REAL
+ IGNAIT STUDIO v1.0 - TRADUCTOR EN TIEMPO REAL & DOBLAJE DE VIDEO (WIN64)
 ================================================================================
  Autor y Arquitecto : Jhon Córdova Martínez
- Alias / Marca      : CRESKO
+ Alias / Marca      : CRESKO · VE
  GitHub Oficial     : https://github.com/MCJ-A
  LinkedIn           : https://www.linkedin.com/in/jhon-cordova-martinez
- Edición            : Cresko Tactical Edition (Win64 / WASAPI / CUDA)
 ================================================================================
 
-INSTRUCCIONES RÁPIDAS PARA NUEVOS USUARIOS:
-1. Extrae este archivo ZIP en cualquier carpeta de tu PC.
-2. Haz doble clic en "Instalar_Ignait.bat".
-3. El instalador detectará automáticamente tu tarjeta gráfica, instalará el
-   cable de audio virtual, descargará los modelos óptimos para tu PC y creará
-   el acceso directo "Ignait Studio" en tu Escritorio.
+INSTALACIÓN EN WINDOWS (MODO APP DE ESCRITORIO):
+1. Haz doble clic en "Instalar_Ignait.bat".
+2. Se instalará Ignait Studio en "%LOCALAPPDATA%\Programs\Ignait", con acceso
+   directo en el Escritorio, Menú Inicio y registro en Aplicaciones instaladas
+   de Windows (con desinstalador incluido).
+3. En un PC nuevo, los modelos de IA se descargan aparte bajo demanda dentro
+   de la carpeta "models\" al configurar el motor desde la app.
 ================================================================================

@@ -46,6 +46,7 @@ from ignait.media.worker_client import XttsWorkerClient
 from ignait.media.ws_protocol import WebSocketConnection, compute_ws_accept_key
 from ignait.mt.translator import NLLB_CT2_REPO, NLLB_TOKENIZER_REPO, TacticalTranslatorEngine
 from ignait.paths import (
+    get_app_icon_path,
     get_browser_extension_dir,
     get_models_dir,
     get_ui_html_path,
@@ -1032,6 +1033,20 @@ class StitchHTTPHandler(BaseHTTPRequestHandler):
             self.wfile.write(html_bytes)
             return
 
+        if parsed.path == "/favicon.ico":
+            icon_path = get_app_icon_path()
+            if icon_path.exists():
+                icon_bytes = icon_path.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/x-icon")
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.send_header("Content-Length", str(len(icon_bytes)))
+                self.end_headers()
+                self.wfile.write(icon_bytes)
+                return
+            self.send_error(404)
+            return
+
         if parsed.path == "/ws/media":
             upgrade_hdr = (self.headers.get("Upgrade") or "").strip().lower()
             ws_key = (self.headers.get("Sec-WebSocket-Key") or "").strip()
@@ -1231,6 +1246,14 @@ def launch_stitch_window(url: str) -> None:
 
 def _build_tray_icon_image():
     from PIL import Image, ImageDraw
+
+    icon_path = get_app_icon_path()
+    if icon_path.exists():
+        try:
+            with Image.open(icon_path) as ico:
+                return ico.convert("RGBA").resize((64, 64), Image.Resampling.LANCZOS)
+        except Exception:
+            pass
 
     img = Image.new("RGBA", (64, 64), (7, 11, 17, 255))
     draw = ImageDraw.Draw(img)

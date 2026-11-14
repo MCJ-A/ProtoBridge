@@ -1,3 +1,5 @@
+<p align="center"><img src="ignait/assets/ignait.png" width="96" alt="Ignait Studio Logo" /></p>
+
 # Ignait Studio
 
 > **Real-Time Full-Duplex Voice Translator, Tactical Audio Router & Cinematographic Media Dubber**  

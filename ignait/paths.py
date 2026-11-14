@@ -76,6 +76,16 @@ def get_ui_html_path() -> Path:
     return Path(__file__).resolve().parent / "ui_stitch.html"
 
 
+def get_app_icon_path() -> Path:
+    """Devuelve la ruta del icono oficial ignait.ico (PyInstaller o desarrollo)."""
+    meipass = getattr(sys, "_MEIPASS", None)
+    if is_frozen() and meipass:
+        candidate = Path(meipass) / "ignait" / "assets" / "ignait.ico"
+        if candidate.exists():
+            return candidate
+    return Path(__file__).resolve().parent / "assets" / "ignait.ico"
+
+
 def get_browser_extension_dir() -> Path:
     """Devuelve la carpeta descomprimida de la extensión Chrome/Edge de Ignait."""
     if is_frozen():
