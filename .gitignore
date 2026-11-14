@@ -1,10 +1,20 @@
 ﻿# Entornos virtuales y cachés de Python
 .venv/
+.venv-media-tts/
 venv/
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Secretos y variables de entorno
+.env
+.env.*
+*.pem
+*.key
 
 # Pesos de Modelos IA (se descargan automáticamente con protobridge.auto_setup)
 models/

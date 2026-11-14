@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 from pathlib import Path
+import time
 import urllib.request
 import numpy as np
 from numpy.typing import NDArray
@@ -14,6 +15,7 @@ SILERO_ONNX_URL = (
 FRAME_SAMPLES = 512  # 32 ms @ 16 kHz
 CONTEXT_SAMPLES = 64
 PREROLL_SAMPLES = 4800  # 300 ms @ 16 kHz
+_CROSS_VAD_GAIN_15DB: float = 10.0 ** (15.0 / 20.0)
 
 
 def ensure_silero_model(models_dir: Path) -> Path:
@@ -53,13 +55,29 @@ class SileroVADSegmenter:
         self._use_v5_state = "state" in self._input_names
 
         self.speech_threshold = speech_threshold
+        self.base_speech_threshold = speech_threshold
         self.silence_threshold = max(0.25, speech_threshold - 0.15)
         self.min_silence_frames = max(1, int(min_silence_ms / 32))
         self.min_speech_samples = int((min_speech_ms / 1000.0) * 16000)
         self.max_speech_samples = int(max_speech_seconds * 16000)
         self.min_rms_linear = float(10.0 ** (min_rms_dbfs / 20.0))
+        self.base_min_rms_linear = self.min_rms_linear
+        self._gate_until_ts: float = 0.0
 
         self.reset_state()
+
+    def notify_output_audio(self, hold_ms: float = 150.0) -> None:
+        """
+        Activa o extiende el Cross-VAD Gating (+15 dB / umbral elevado) durante la emisión
+        de audio local y un margen posterior (por defecto 150 ms) para evitar auto-traducción.
+        """
+        target = time.perf_counter() + max(0.0, hold_ms) / 1000.0
+        if target > self._gate_until_ts:
+            self._gate_until_ts = target
+
+    @property
+    def is_cross_vad_gated(self) -> bool:
+        return time.perf_counter() < self._gate_until_ts
 
     def reset_state(self) -> None:
         self._state = np.zeros((2, 1, 128), dtype=np.float32)
@@ -104,8 +122,20 @@ class SileroVADSegmenter:
             prob = self._infer_frame(frame_buf)
             self.last_prob = prob
 
+            gated = time.perf_counter() < self._gate_until_ts
+            eff_speech_thresh = (
+                min(0.92, self.base_speech_threshold + 0.25)
+                if gated
+                else self.base_speech_threshold
+            )
+            eff_min_rms = (
+                self.base_min_rms_linear * _CROSS_VAD_GAIN_15DB
+                if gated
+                else self.base_min_rms_linear
+            )
+
             if not self.is_speaking:
-                if prob >= self.speech_threshold:
+                if prob >= eff_speech_thresh:
                     self.is_speaking = True
                     self._speech_start_cursor = frame_start_cursor
                     self._silence_frames_count = 0
@@ -128,7 +158,7 @@ class SileroVADSegmenter:
                             preroll_samples=PREROLL_SAMPLES,
                         )
                         rms = float(np.sqrt(np.mean(np.square(segment)) + 1e-12))
-                        if rms >= self.min_rms_linear:
+                        if rms >= eff_min_rms:
                             completed_segments.append(segment)
 
                     self.is_speaking = False

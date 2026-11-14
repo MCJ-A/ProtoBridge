@@ -39,7 +39,14 @@ HALLUCINATION_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(r"subtitles\s+by|amara\.org|transcribed\s+by|subt[íi]tulos\s+por", re.IGNORECASE),
     re.compile(r"please\s+subscribe|like\s+and\s+subscribe|suscr[íi]bete", re.IGNORECASE),
     re.compile(r"^\s*(you|thank you\.?|bye\.?|gracias\.?)\s*$", re.IGNORECASE),
+    re.compile(r"^[\W_♪♫♬]+$"),
 )
+
+_NON_SPEECH_TAG_RE = re.compile(
+    r"\[[^\]]*\]|\((?:music|música|applause|aplausos|laughter|risas|cheering|sighs?|suspiros?|silence|silencio|noise|ruido|inaudible|sfx)[^)]*\)|[♪♫♬]+",
+    re.IGNORECASE,
+)
+_REPEAT_LOOP_RE = re.compile(r"\b(\w+)(?:[\s,]+\1){3,}\b", re.IGNORECASE)
 
 
 class WhisperTranslatorEngine:
@@ -63,9 +70,17 @@ class WhisperTranslatorEngine:
             self._model = WhisperModel(model_size, device="cpu", compute_type="int8", cpu_threads=6)
 
     @staticmethod
+    def _clean_transcript(text: str) -> str:
+        cleaned = _NON_SPEECH_TAG_RE.sub(" ", text or "")
+        cleaned = _REPEAT_LOOP_RE.sub(r"\1", cleaned)
+        return re.sub(r"\s+", " ", cleaned).strip()
+
+    @staticmethod
     def _is_hallucination(text: str) -> bool:
         cleaned = text.strip()
         if len(cleaned) < 2:
+            return True
+        if not re.search(r"[0-9A-Za-zÀ-ÿА-Яа-я一-龯ぁ-ゔァ-ヴー가-힣]", cleaned):
             return True
         for pattern in HALLUCINATION_PATTERNS:
             if pattern.search(cleaned):
@@ -88,7 +103,7 @@ class WhisperTranslatorEngine:
             compression_ratio_threshold=2.2,
             initial_prompt=GAMING_PROMPT_EN,
         )
-        text = " ".join(seg.text.strip() for seg in segments).strip()
+        text = self._clean_transcript(" ".join(seg.text.strip() for seg in segments))
         return "" if self._is_hallucination(text) else text
 
     def transcribe_any(
@@ -113,7 +128,7 @@ class WhisperTranslatorEngine:
             compression_ratio_threshold=2.2,
             initial_prompt=GAMING_PROMPT_EN if lang_arg == "en" else None,
         )
-        text = " ".join(seg.text.strip() for seg in segments).strip()
+        text = self._clean_transcript(" ".join(seg.text.strip() for seg in segments))
         if self._is_hallucination(text):
             return "", info.language or "en", 0.0
         return text, (info.language or "en"), float(info.language_probability)

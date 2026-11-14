@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProtoBridge</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      width: 330px;
+      background: #0b111a;
+      color: #f1f5f9;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      font-size: 13px;
+      padding: 14px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .title {
+      font-weight: 700;
+      color: #f8fafc;
+      font-size: 15px;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .status-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      background: #111927;
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .status-ok {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+    .status-err {
+      border-color: rgba(244, 63, 94, 0.45);
+      color: #fda4af;
+    }
+    .btn-small {
+      background: #172233;
+      color: #cbd5e1;
+      border: 1px solid #2b3a50;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .btn-small:hover {
+      background: #213047;
+    }
+    .toggle-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #1e293b;
+      background: #111a28;
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+    .toggle-card strong {
+      color: #f8fafc;
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .toggle-card span {
+      color: #94a3b8;
+      font-size: 11px;
+    }
+    .toggle-card input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .field {
+      margin-bottom: 10px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    label strong {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    select,
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: #090e17;
+      color: #f1f5f9;
+      border: 1px solid #233146;
+      border-radius: 9px;
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+    input[type="range"] {
+      accent-color: #38bdf8;
+    }
+    .dir-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    .dir-btn {
+      background: #111927;
+      color: #94a3b8;
+      border: 1px solid #1e293b;
+      border-radius: 9px;
+      padding: 7px 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    .dir-btn:hover {
+      border-color: #38bdf8;
+      color: #f1f5f9;
+    }
+    .dir-btn.active-both {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: #10b981;
+      color: #6ee7b7;
+    }
+    .dir-btn.active-rx {
+      background: rgba(6, 182, 212, 0.18);
+      border-color: #06b6d4;
+      color: #67e8f9;
+    }
+    .dir-btn.active-tx {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: #f59e0b;
+      color: #fcd34d;
+    }
+    .dir-btn.active-mute {
+      background: rgba(244, 63, 94, 0.18);
+      border-color: #f43f5e;
+      color: #fda4af;
+    }
+    details.advanced-panel {
+      background: #0f1724;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+    details.advanced-panel > summary {
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    details.advanced-panel > summary::-webkit-details-marker {
+      display: none;
+    }
+    details.advanced-panel[open] > summary {
+      color: #e2e8f0;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .footer {
+      border-top: 1px solid #1a2433;
+      padding-top: 8px;
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">ProtoBridge</div>
+      <div class="subtitle">Doblaje instantáneo de video</div>
+    </div>
+    <button id="btnRetry" class="btn-small" type="button">Reconectar</button>
+  </div>
+
+  <div id="statusBox" class="status-box">
+    <span id="statusText">Conectando con ProtoBridge...</span>
+  </div>
+
+  <label class="toggle-card" for="chkEnabled">
+    <div>
+      <strong>Traducir este video</strong>
+      <span>Escucha el doblaje automáticamente</span>
+    </div>
+    <input id="chkEnabled" type="checkbox" />
+  </label>
+
+  <div class="grid">
+    <div>
+      <label for="selSourceLang">Video en</label>
+      <select id="selSourceLang">
+        <option value="auto">Auto-detectar</option>
+        <option value="en">Inglés</option>
+        <option value="es">Español</option>
+        <option value="ru">Ruso</option>
+        <option value="pt">Portugués</option>
+        <option value="fr">Francés</option>
+        <option value="it">Italiano</option>
+      </select>
+    </div>
+    <div>
+      <label for="selTargetLang">Traducir a</label>
+      <select id="selTargetLang">
+        <option value="es">Español</option>
+        <option value="en">Inglés</option>
+        <option value="ru">Ruso</option>
+        <option value="pt">Portugués</option>
+        <option value="fr">Francés</option>
+        <option value="it">Italiano</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="dir-bar" role="group" aria-label="Control rápido de canales">
+    <button id="btnDirBoth" class="dir-btn" type="button" title="Traducir tu voz y los videos">⇄ Todo</button>
+    <button id="btnDirRxOnly" class="dir-btn" type="button" title="Solo escuchar videos (apaga tu micrófono)">🎧 Solo Video</button>
+    <button id="btnDirTxOnly" class="dir-btn" type="button" title="Solo traducir tu voz (apaga videos)">🎙️ Solo Voz</button>
+    <button id="btnDirMuteAll" class="dir-btn" type="button" title="Pausar todo">🔇 Silencio</button>
+  </div>
+
+  <details class="advanced-panel">
+    <summary>
+      <span>Opciones avanzadas</span>
+      <span style="font-size:10px;color:#64748b;">Voz, sincronía y velocidad ▾</span>
+    </summary>
+
+    <div class="grid">
+      <div>
+        <label for="selTtsBackend">Calidad de voz</label>
+        <select id="selTtsBackend">
+          <option value="xtts_v2">Natural (XTTS GPU)</option>
+          <option value="auto">Automático</option>
+          <option value="kokoro">Rápido (Kokoro CPU)</option>
+        </select>
+      </div>
+      <div>
+        <label for="selCaptureMode">Fuente de texto</label>
+        <select id="selCaptureMode">
+          <option value="auto">Automático</option>
+          <option value="audio">Solo audio</option>
+          <option value="hybrid">Subtítulos + audio</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <label for="selVoice">Voz</label>
+        <select id="selVoice">
+          <option value="auto">Igualar al hablante</option>
+          <option value="em_alex">Alex (M)</option>
+          <option value="ef_dora">Dora (F)</option>
+          <option value="am_adam">Adam (EN M)</option>
+          <option value="bf_emma">Emma (EN F)</option>
+          <option value="my_cloned">Mi voz clonada</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:6px;">
+        <label style="margin:0;display:flex;align-items:center;gap:6px;cursor:pointer;color:#cbd5e1;">
+          <input id="chkDiarization" type="checkbox" checked style="accent-color:#38bdf8;" />
+          <span>Varias voces</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="field" style="display:flex;align-items:center;justify-content:space-between;padding:7px 9px;background:#090e17;border:1px solid #1e293b;border-radius:8px;">
+      <label for="chkAutoSync" style="margin:0;cursor:pointer;color:#cbd5e1;font-weight:500;display:flex;align-items:center;gap:6px;">
+        <input id="chkAutoSync" type="checkbox" checked style="accent-color:#38bdf8;" />
+        <span>Sincronía automática</span>
+      </label>
+      <span id="syncModeTag" style="font-size:10px;color:#34d399;font-weight:600;">AUTO</span>
+    </div>
+
+    <div id="delayFieldBox" class="field">
+      <label for="rngDelay">Margen de sincronía: <strong id="lblDelay">2500 ms</strong></label>
+      <input id="rngDelay" type="range" min="0" max="4500" step="250" value="2500" />
+    </div>
+
+    <div class="field">
+      <label for="rngDuck">Volumen original del video: <strong id="lblDuck">-14 dB</strong></label>
+      <input id="rngDuck" type="range" min="-24" max="-6" step="2" value="-14" />
+    </div>
+
+    <div class="field" style="margin-bottom:2px;">
+      <label for="rngSpeed">Velocidad del doblaje: <strong id="lblSpeed">1.08x</strong></label>
+      <input id="rngSpeed" type="range" min="0.90" max="1.35" step="0.05" value="1.08" />
+    </div>
+  </details>
+
+  <div id="tabHint" class="footer">Los cambios se aplican al instante.</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

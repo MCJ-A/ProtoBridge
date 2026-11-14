@@ -43,6 +43,50 @@ class TestSPSCRingBuffer(unittest.TestCase):
         finally:
             rb.close()
 
+    def test_overflow_does_not_mutate_producer_read_cursor_and_read_all_clamps(self) -> None:
+        rb = SPSCRingBuffer(
+            name="test_rb_ci_overflow", capacity_seconds=0.1, sample_rate=1000, create=True
+        )
+        try:
+            self.assertEqual(rb.capacity, 100)
+            chunk1 = np.arange(80, dtype=np.float32)
+            rb.write(chunk1)
+            # Provocar overflow de 50 muestras sin que el consumidor haya avanzado _header[1]
+            chunk2 = np.arange(80, 150, dtype=np.float32)
+            rb.write(chunk2)
+
+            # Invariante SPSC: el productor nunca debe mutar _header[1]
+            self.assertEqual(int(rb._header[1]), 0)
+            self.assertEqual(rb.write_cursor, 150)
+            self.assertGreaterEqual(int(rb._header[2]), 1)
+
+            # El consumidor debe clampear a los últimos `capacity` elementos (50..149)
+            self.assertEqual(rb.read_cursor, 50)
+            self.assertEqual(rb.available_to_read, 100)
+            st = rb.stats()
+            self.assertEqual(st.available_read, 100)
+            self.assertEqual(st.read_cursor, 50)
+
+            drained = rb.read_all()
+            np.testing.assert_array_equal(drained, np.arange(50, 150, dtype=np.float32))
+            self.assertEqual(rb.available_to_read, 0)
+            self.assertEqual(int(rb._header[1]), 150)
+            # read_all con buffer vacío devuelve arreglo vacío
+            self.assertEqual(rb.read_all().shape, (0,))
+        finally:
+            rb.close()
+
+    def test_close_releases_views_cleanly_for_reconnect(self) -> None:
+        for _ in range(3):
+            rb = SPSCRingBuffer(
+                name="test_rb_ci_reconn", capacity_seconds=0.05, sample_rate=1000, create=True
+            )
+            rb.write(np.ones(16, dtype=np.float32))
+            _ = rb.read_all()
+            rb.close()
+            # Segunda invocación debe ser idempotente sin BufferError
+            rb.close()
+
 
 if __name__ == "__main__":
     unittest.main()

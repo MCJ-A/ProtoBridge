@@ -3,429 +3,612 @@
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>ProtoBridge Studio v1.0 - Traductor Bidireccional Táctico en Tiempo Real</title>
+  <title>ProtoBridge Studio</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com" rel="preconnect"/>
-  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet"/>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            tactical: {
-              bg: '#0A0E14',
-              surface: '#0F1621',
-              panel: '#131C2A',
-              border: '#1E2D42',
-              borderBright: '#2C4260',
-              amber: '#F59E0B',
-              orange: '#FF5722',
-              cyan: '#00E5FF',
-              blue: '#0284C7',
-              emerald: '#10B981',
-              red: '#EF4444'
-            }
-          },
-          fontFamily: {
-            mono: ['"JetBrains Mono"', 'monospace'],
-            tactical: ['"Chakra Petch"', 'sans-serif'],
-            hud: ['"Rajdhani"', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #090D12; }
-    ::-webkit-scrollbar-thumb { background: #1B283A; border-radius: 2px; border: 1px solid #273C58; }
-    ::-webkit-scrollbar-thumb:hover { background: #2D4363; }
-    .scanlines {
-      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
-                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-      background-size: 100% 3px, 6px 100%;
+    :root { color-scheme: dark; }
+    body {
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
     }
-    .clip-corner-sm {
-      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0b1017; }
+    ::-webkit-scrollbar-thumb { background: #223044; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334866; }
+
+    /* Switch toggle limpio */
+    .pb-switch {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      cursor: pointer;
+    }
+    .pb-switch input {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 38px;
+      height: 22px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 999px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease;
+      flex-shrink: 0;
+    }
+    .pb-switch input::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+    .pb-switch input:checked {
+      background: rgba(14, 165, 233, 0.35);
+      border-color: #38bdf8;
+    }
+    .pb-switch input:checked::after {
+      transform: translateX(16px);
+      background: #38bdf8;
+    }
+    .pb-switch.amber input:checked {
+      background: rgba(245, 158, 11, 0.32);
+      border-color: #fbbf24;
+    }
+    .pb-switch.amber input:checked::after {
+      background: #fbbf24;
+    }
+    .pb-switch.rose input:checked {
+      background: rgba(244, 63, 94, 0.32);
+      border-color: #fb7185;
+    }
+    .pb-switch.rose input:checked::after {
+      background: #fb7185;
+    }
+    details > summary {
+      list-style: none;
+    }
+    details > summary::-webkit-details-marker {
+      display: none;
     }
   </style>
 </head>
-<body class="h-full bg-[#080C11] text-slate-200 font-tactical antialiased overflow-hidden flex flex-col justify-between border border-[#1A2636]">
+<body class="h-full bg-[#090d14] text-slate-100 antialiased overflow-hidden flex flex-col">
 
-  <!-- BEGIN: AppMainHeader -->
-  <header class="bg-[#0B1017] border-b border-[#172333] px-5 py-3 flex items-center justify-between shadow-lg">
-    <div class="flex items-center space-x-4">
-      <div class="flex items-baseline space-x-2">
-        <svg class="w-5 h-5 text-amber-500 self-center mr-1" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+  <!-- Barra superior minimalista -->
+  <header class="bg-[#0e1520]/95 border-b border-slate-800/80 px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-3.5">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-500/20 to-amber-500/20 border border-slate-700/70 flex items-center justify-center">
+        <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/>
         </svg>
-        <h1 class="text-xl md:text-2xl font-bold tracking-wider text-amber-500 flex items-center gap-2">
-          PROTOBRIDGE <span class="text-slate-600 font-light">//</span> <span class="text-slate-100 font-semibold">TRADUCTOR TÁCTICO MULTIJUGADOR</span>
-        </h1>
       </div>
-      <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/40 text-[10px] font-mono tracking-widest text-red-400" id="statusBadge">
-        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse" id="statusIndicatorDot"></span>
-        <span class="font-bold" id="statusBadgeText">DETENIDO</span>
+      <div>
+        <div class="flex items-center gap-2.5">
+          <h1 class="text-lg font-semibold tracking-tight text-white">ProtoBridge</h1>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-slate-700 bg-slate-800/80 text-[11px] font-medium text-slate-300" id="statusBadge">
+            <span class="w-2 h-2 rounded-full bg-slate-400" id="statusIndicatorDot"></span>
+            <span id="statusBadgeText">Listo</span>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400">Traducción de voz y video en tiempo real</p>
       </div>
     </div>
 
-    <div class="flex items-center space-x-3">
-      <button class="clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-[#00A86B] hover:bg-[#00c57d] text-black shadow-[0_0_15px_rgba(0,168,107,0.35)] border border-[#00ff9d]" id="mainToggleBtn" onclick="toggleEngineState()">
+    <div class="flex items-center gap-2.5">
+      <button type="button" onclick="triggerBackendAction('clone_voice')"
+        class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 border border-slate-700 transition-colors cursor-pointer">
+        🎙️ Clonar mi voz (5s)
+      </button>
+      <button type="button" id="mainToggleBtn" onclick="toggleEngineState()"
+        class="px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm cursor-pointer">
         <span class="text-xs" id="btnIcon">▶</span>
-        <span id="btnLabel">ENCENDER PROTOBRIDGE</span>
+        <span id="btnLabel">Iniciar</span>
       </button>
     </div>
   </header>
-  <!-- END: AppMainHeader -->
 
-  <!-- BEGIN: NavigationTabs -->
-  <nav class="bg-[#090E14] border-b border-[#1A2638] px-4 pt-1 flex items-center space-x-1">
-    <button class="px-4 py-2 border-b-2 border-amber-500 text-amber-400 bg-[#121B27]/80 text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-live-cabin" onclick="switchTab('live-cabin')">
-      <span>🎙️</span> Cabina en Vivo &amp; Idiomas
+  <!-- Navegación simple de 3 pestañas -->
+  <nav class="bg-[#0b111b] border-b border-slate-800/70 px-6 pt-2 flex items-center gap-1.5">
+    <button type="button" id="tab-live-cabin" onclick="switchTab('live-cabin')"
+      class="px-4 py-2 rounded-t-xl text-xs font-semibold text-white bg-[#111927] border border-b-0 border-slate-800/80 transition-colors cursor-pointer">
+      Traductor
     </button>
-    <button class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-audio-buses" onclick="switchTab('audio-buses')">
-      <span>🎧</span> Buses de Audio &amp; Voces
+    <button type="button" id="tab-audio-buses" onclick="switchTab('audio-buses')"
+      class="px-4 py-2 rounded-t-xl text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+      Audio y Ajustes Avanzados
     </button>
-    <button class="px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all" id="tab-model-installer" onclick="switchTab('model-installer')">
-      <span>⬇️</span> Instalador de Modelos e Idiomas
+    <button type="button" id="tab-model-installer" onclick="switchTab('model-installer')"
+      class="px-4 py-2 rounded-t-xl text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+      Idiomas y Modelos
     </button>
   </nav>
-  <!-- END: NavigationTabs -->
 
-  <!-- BEGIN: MainContentArea -->
-  <main class="flex-1 flex flex-col p-4 gap-3 bg-[#0B0F15] overflow-y-auto">
+  <!-- Contenido principal -->
+  <main class="flex-1 flex flex-col p-5 gap-4 bg-[#090d14] overflow-y-auto">
 
-    <!-- Tab View 1: Cabina en Vivo -->
-    <div class="flex flex-col gap-3 flex-1" id="view-live-cabin">
+    <!-- VISTA 1: Traductor (simple, claro, sin ruido) -->
+    <div class="flex flex-col gap-4 flex-1 max-w-6xl w-full mx-auto" id="view-live-cabin">
+
+      <!-- Selector rápido de flujo / dirección -->
+      <section class="bg-[#101825] border border-slate-800/80 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-col">
+          <span class="text-[11px] text-slate-400">¿Qué deseas traducir?</span>
+          <span id="directionSummaryText" class="text-sm font-medium text-emerald-300">Todo activo (tú y lo que escuchas)</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5" role="group" aria-label="Control de dirección de audio">
+          <button type="button" id="btnDirBoth" onclick="setDirectionMode(false, false)"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors bg-emerald-500/20 text-emerald-300 border-emerald-500/40 cursor-pointer">
+            ⇄ Todo
+          </button>
+          <button type="button" id="btnDirRxOnly" onclick="setDirectionMode(true, false)"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors bg-slate-800/70 text-slate-300 border-slate-700 hover:border-cyan-500/50 cursor-pointer">
+            🎧 Solo escuchar
+          </button>
+          <button type="button" id="btnDirTxOnly" onclick="setDirectionMode(false, true)"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors bg-slate-800/70 text-slate-300 border-slate-700 hover:border-amber-500/50 cursor-pointer">
+            🎙️ Solo hablar
+          </button>
+          <button type="button" id="btnDirMuteAll" onclick="setDirectionMode(true, true)"
+            class="px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors bg-slate-800/70 text-slate-400 border-slate-700 hover:border-rose-500/50 cursor-pointer">
+            🔇 Pausar
+          </button>
+        </div>
+      </section>
+
+      <!-- Tarjetas limpias: Tu Voz + Lo que Escuchas -->
       <section class="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        <!-- Stream 1: TX (My Mic -> Game) -->
-        <article class="bg-[#0E1520] border border-[#1C2C40] p-4 relative group">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-500 via-orange-500 to-transparent"></div>
-          <div class="flex items-center justify-between pb-3 border-b border-[#182333] mb-4">
-            <h2 class="text-sm font-bold tracking-wider text-amber-400 flex items-center gap-2">
-              <span class="w-2 h-2 bg-amber-500 rounded-sm"></span>
-              FLUJO 1: TU MICRÓFONO -&gt; JUEGO
-            </h2>
-            <span class="text-[10px] font-mono bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded">TX TRANSMISIÓN</span>
+        <!-- Tarjeta Izquierda: Tu voz -->
+        <article class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <div>
+                <h2 class="text-sm font-semibold text-white">Tu voz</h2>
+                <p class="text-[11px] text-slate-400">Lo que dices hacia tu chat o juego</p>
+              </div>
+            </div>
+            <span id="txChannelPill" class="text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">Activo</span>
           </div>
 
-          <div class="space-y-3.5 text-xs">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label class="text-slate-400 font-medium">Tú hablas en:</label>
-              <div class="w-full sm:w-2/3">
-                <select id="selMySrc" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
-                  <option value="es">Español (ES/LATAM)</option>
-                  <option value="auto">Detectar Automáticamente (Multi)</option>
-                  <option value="en">English (US/UK)</option>
-                  <option value="pt">Português (BR)</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="it">Italiano</option>
-                </select>
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="selMySrc" class="block text-xs text-slate-400 mb-1">Hablas en</label>
+              <select id="selMySrc" onchange="pushLiveConfig()" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl focus:ring-1 focus:ring-amber-400 focus:border-amber-400">
+                <option value="es">Español</option>
+                <option value="auto">Detectar automático</option>
+                <option value="en">Inglés</option>
+                <option value="pt">Portugués</option>
+                <option value="fr">Francés</option>
+                <option value="de">Alemán</option>
+                <option value="it">Italiano</option>
+                <option value="ru">Ruso</option>
+              </select>
             </div>
+            <div>
+              <label for="selMyTgt" class="block text-xs text-slate-400 mb-1">Ellos te escuchan en</label>
+              <select id="selMyTgt" onchange="pushLiveConfig()" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl focus:ring-1 focus:ring-amber-400 focus:border-amber-400">
+                <option value="en">Inglés</option>
+                <option value="es">Español</option>
+                <option value="pt">Portugués</option>
+                <option value="fr">Francés</option>
+                <option value="it">Italiano</option>
+                <option value="ru">Ruso</option>
+              </select>
+            </div>
+          </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label class="text-slate-400 font-medium">El juego escucha en:</label>
-              <div class="w-full sm:w-2/3">
-                <select id="selMyTgt" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-amber-500 focus:border-amber-500">
-                  <option value="en">Inglés (English)</option>
-                  <option value="es">Español (Spanish)</option>
-                  <option value="pt">Português (BR)</option>
-                  <option value="fr">Français</option>
-                  <option value="it">Italiano</option>
-                </select>
-              </div>
+          <!-- Medidor de voz suave -->
+          <div>
+            <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5">
+              <span>Nivel de micrófono</span>
+              <span class="text-slate-300 font-mono text-[11px]" id="micDbText">-100.0 dBFS</span>
             </div>
+            <div class="w-full bg-[#080c13] h-3 rounded-full border border-slate-800/90 p-0.5 flex gap-0.5 overflow-hidden">
+              <div class="flex-1 flex gap-0.5" id="micVuBars"></div>
+            </div>
+          </div>
 
-            <div class="pt-2 border-t border-[#15202E] flex flex-wrap gap-4 text-xs">
-              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
-                <input id="chkMuteTx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-amber-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
-                <span>Silenciar mi traducción (Mute TX)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
-                <input id="chkMonitorTx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-amber-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
-                <span>Escuchar mi traducción en mis cascos</span>
-              </label>
-            </div>
-
-            <div class="mt-4 pt-3 border-t border-[#15202E] font-mono text-[11px]">
-              <div class="flex justify-between items-center text-slate-400 mb-1">
-                <span>Nivel Mic: <strong class="text-amber-400 font-mono" id="micDbText">-100.0 dBFS</strong></span>
-                <span class="text-[10px] text-slate-500" id="lblMicHwTag">WASAPI 16kHz DSP</span>
-              </div>
-              <div class="w-full bg-[#080B10] h-3.5 border border-[#1A283B] p-0.5 flex gap-0.5 overflow-hidden">
-                <div class="flex-1 flex gap-0.5" id="micVuBars"></div>
-              </div>
-              <div class="text-[10px] text-slate-500 flex justify-between mt-0.5 px-0.5">
-                <span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>-6</span><span>0 dB</span>
-              </div>
-            </div>
+          <div class="pt-3 border-t border-slate-800/70 space-y-2.5 text-xs">
+            <label class="pb-switch rose w-full text-slate-300">
+              <span>Silenciar mi micrófono traducido</span>
+              <input id="chkMuteTx" onchange="pushLiveConfig()" type="checkbox"/>
+            </label>
+            <label class="pb-switch amber w-full text-slate-300">
+              <span>Escuchar mi propia traducción en auriculares</span>
+              <input id="chkMonitorTx" onchange="pushLiveConfig()" type="checkbox"/>
+            </label>
           </div>
         </article>
 
-        <!-- Stream 2: RX (Teammates -> Your Headphones) -->
-        <article class="bg-[#0E1520] border border-[#1C2C40] p-4 relative group">
-          <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-blue-500 to-transparent"></div>
-          <div class="flex items-center justify-between pb-3 border-b border-[#182333] mb-4">
-            <h2 class="text-sm font-bold tracking-wider text-cyan-400 flex items-center gap-2">
-              <span class="w-2 h-2 bg-cyan-500 rounded-sm"></span>
-              FLUJO 2: COMPAÑEROS -&gt; TUS AURICULARES (3D)
-            </h2>
-            <span class="text-[10px] font-mono bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2 py-0.5 rounded">RX RECEPCIÓN</span>
-          </div>
-
-          <div class="space-y-3.5 text-xs">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label class="text-slate-400 font-medium">Idioma compañeros:</label>
-              <div class="w-full sm:w-2/3">
-                <select id="selTeamSrc" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
-                  <option value="auto">Detectar Automáticamente (Multi)</option>
-                  <option value="en">English (North America / EU)</option>
-                  <option value="pt">Português (BR)</option>
-                  <option value="fr">Français</option>
-                  <option value="de">Deutsch</option>
-                  <option value="ru">Русский (Russian)</option>
-                  <option value="es">Español</option>
-                </select>
+        <!-- Tarjeta Derecha: Lo que escuchas -->
+        <article class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+              <div>
+                <h2 class="text-sm font-semibold text-white">Lo que escuchas</h2>
+                <p class="text-[11px] text-slate-400">Otras personas, juegos o videos en tu PC/navegador</p>
               </div>
             </div>
+            <span id="rxChannelPill" class="text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">Activo</span>
+          </div>
 
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <label class="text-slate-400 font-medium">Traducir para mí a:</label>
-              <div class="w-full sm:w-2/3">
-                <select id="selTeamTgt" onchange="pushLiveConfig()" class="w-full bg-[#080D14] border border-[#1E2D40] text-slate-200 text-xs py-1.5 px-2.5 rounded focus:ring-1 focus:ring-cyan-500 focus:border-cyan-500">
-                  <option value="es">Español</option>
-                  <option value="en">English (US)</option>
-                  <option value="pt">Português</option>
-                  <option value="fr">Français</option>
-                  <option value="it">Italiano</option>
-                </select>
-              </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="selTeamSrc" class="block text-xs text-slate-400 mb-1">Audio / video en</label>
+              <select id="selTeamSrc" onchange="pushLiveConfig()" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
+                <option value="auto">Detectar automático</option>
+                <option value="en">Inglés</option>
+                <option value="pt">Portugués</option>
+                <option value="fr">Francés</option>
+                <option value="de">Alemán</option>
+                <option value="ru">Ruso</option>
+                <option value="es">Español</option>
+              </select>
             </div>
-
-            <div class="pt-2 border-t border-[#15202E] flex flex-wrap gap-4 text-xs">
-              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
-                <input id="chkMuteRx" onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-cyan-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
-                <span>Silenciar traducción de compañeros (Mute RX)</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer select-none text-slate-300 hover:text-white">
-                <input id="chkSpatial3D" checked onchange="pushLiveConfig()" class="w-3.5 h-3.5 rounded bg-[#090E16] border-[#22354D] text-cyan-500 focus:ring-0 focus:ring-offset-0" type="checkbox"/>
-                <span>Espacialización HRTF 3D activa</span>
-              </label>
-            </div>
-
-            <div class="mt-4 pt-3 border-t border-[#15202E] font-mono text-[11px]">
-              <div class="flex justify-between items-center text-slate-400 mb-1">
-                <span>Nivel Chat: <strong class="text-cyan-400 font-mono" id="chatDbText">-100.0 dBFS</strong></span>
-                <span class="text-[10px] text-slate-500">CANAL LOOPBACK AISLADO</span>
-              </div>
-              <div class="w-full bg-[#080B10] h-3.5 border border-[#1A283B] p-0.5 flex gap-0.5 overflow-hidden">
-                <div class="flex-1 flex gap-0.5" id="chatVuBars"></div>
-              </div>
-              <div class="text-[10px] text-slate-500 flex justify-between mt-0.5 px-0.5">
-                <span>-60</span><span>-40</span><span>-20</span><span>-12</span><span>-6</span><span>0 dB</span>
-              </div>
+            <div>
+              <label for="selTeamTgt" class="block text-xs text-slate-400 mb-1">Lo escuchas en</label>
+              <select id="selTeamTgt" onchange="pushLiveConfig()" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl focus:ring-1 focus:ring-cyan-400 focus:border-cyan-400">
+                <option value="es">Español</option>
+                <option value="en">Inglés</option>
+                <option value="pt">Portugués</option>
+                <option value="fr">Francés</option>
+                <option value="it">Italiano</option>
+                <option value="ru">Ruso</option>
+              </select>
             </div>
           </div>
-        </article>
-      </section>
 
-      <!-- BEGIN: SquadronRadarHUD -->
-      <section class="bg-[#0B1017] border border-[#182535] px-4 py-2.5 flex flex-wrap items-center justify-between text-xs font-mono">
-        <div class="flex items-center gap-2 text-indigo-300 font-semibold tracking-wide">
-          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
-          RADAR DE ESCUADRÓN 3D:
-        </div>
-        <div class="flex flex-wrap gap-4 mt-2 sm:mt-0 text-[11px]">
-          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
-            <span>[</span>
-            <span class="text-cyan-400">◀ #1 IZQ:</span>
-            <span class="text-slate-500" id="pos-left-status">Inactivo</span>
-            <span>]</span>
+          <!-- Medidor audio entrante -->
+          <div>
+            <div class="flex justify-between items-center text-[11px] text-slate-400 mb-1.5">
+              <span>Nivel de audio entrante</span>
+              <span class="text-slate-300 font-mono text-[11px]" id="chatDbText">-100.0 dBFS</span>
+            </div>
+            <div class="w-full bg-[#080c13] h-3 rounded-full border border-slate-800/90 p-0.5 flex gap-0.5 overflow-hidden">
+              <div class="flex-1 flex gap-0.5" id="chatVuBars"></div>
+            </div>
           </div>
-          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
-            <span>[</span>
-            <span class="text-amber-400">▲ #2 CENTRO:</span>
-            <span class="text-slate-500" id="pos-center-status">Inactivo</span>
-            <span>]</span>
-          </div>
-          <div class="flex items-center space-x-1.5 px-3 py-1 bg-[#0F1722] border border-[#1F3147] rounded text-slate-400">
-            <span>[</span>
-            <span class="text-emerald-400">▶ #3 DER:</span>
-            <span class="text-slate-500" id="pos-right-status">Inactivo</span>
-            <span>]</span>
-          </div>
-        </div>
-      </section>
-      <!-- END: SquadronRadarHUD -->
 
-      <!-- BEGIN: TelemetryAndLogTerminal -->
-      <section class="bg-[#080C12] border border-[#182333] flex flex-col flex-1 min-h-[210px]">
-        <div class="bg-[#0C121A] px-3 py-2 border-b border-[#182333] flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-              <path clip-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3 1a1 1 0 000 2h10a1 1 0 100-2H5zm0 4a1 1 0 000 2h6a1 1 0 100-2H5z" fill-rule="evenodd"></path>
-            </svg>
-            <span class="text-xs font-mono font-bold tracking-wider text-amber-400">REGISTRO DE TRADUCCIÓN Y LATENCIA EN VIVO</span>
+          <div class="pt-3 border-t border-slate-800/70 space-y-2.5 text-xs">
+            <label class="pb-switch rose w-full text-slate-300">
+              <span>Silenciar audio traducido que escucho</span>
+              <input id="chkMuteRx" onchange="pushLiveConfig()" type="checkbox"/>
+            </label>
+            <label class="pb-switch w-full text-slate-300">
+              <span>Modo Video / Películas (voces naturales + sincronía)</span>
+              <input id="chkMediaMode" onchange="pushLiveConfig()" type="checkbox"/>
+            </label>
           </div>
-          <div class="flex items-center space-x-2 text-[11px] font-mono">
-            <button class="px-2 py-0.5 bg-[#121A26] hover:bg-[#1B2738] border border-[#223348] text-slate-300 rounded" onclick="clearConsoleLog()">
-              Limpiar
+
+          <div class="flex items-center gap-2 pt-1">
+            <button type="button" onclick="triggerBackendAction('open_chrome_extension_folder')"
+              class="flex-1 px-3 py-2 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors cursor-pointer">
+              🧩 Extensión Chrome / Edge (YouTube y Web)
+            </button>
+            <button type="button" onclick="switchTab('audio-buses')"
+              class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 text-slate-300 text-xs font-medium transition-colors cursor-pointer"
+              title="Abrir ajustes de voz, motores y dispositivos">
+              ⚙️ Ajustes
             </button>
           </div>
-        </div>
+        </article>
+      </section>
 
-        <div class="p-3 font-mono text-xs leading-relaxed overflow-y-auto flex-1 scanlines select-text space-y-1" id="terminalLogContainer">
-          <div class="text-amber-400/90">[SISTEMA] ProtoBridge Studio listo. Presiona ENCENDER PROTOBRIDGE para iniciar los motores.</div>
+      <!-- Registro de traducciones claro y legible -->
+      <section class="bg-[#101825] border border-slate-800/80 rounded-2xl flex flex-col flex-1 min-h-[165px]">
+        <div class="px-4 py-2.5 border-b border-slate-800/70 flex items-center justify-between">
+          <span class="text-xs font-semibold text-slate-300">Traducciones y actividad reciente</span>
+          <button type="button" onclick="clearConsoleLog()"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium transition-colors cursor-pointer">
+            Limpiar
+          </button>
         </div>
-
-        <div class="bg-[#070B0F] border-t border-[#15202E] px-3 py-1.5 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400">
-          <div class="flex items-center space-x-4">
-            <span class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              GPU: <span class="text-slate-200">NVIDIA GeForce RTX 5060</span>
-            </span>
-            <span>VRAM MOTOR: <span class="text-amber-400">~0.42 GB / 8.0 GB</span></span>
-            <span>ÚLTIMA LATENCIA: <span class="text-cyan-400" id="lblLatencyMetric">-- ms</span></span>
-          </div>
-          <div class="flex items-center space-x-3 text-slate-500">
-            <span>TTS: <span class="text-slate-300">Kokoro-82M INT8</span></span>
-            <span>MT: <span class="text-slate-300">NLLB-200</span></span>
-            <span class="text-emerald-500 font-semibold">CUDA INT8_FLOAT16</span>
-          </div>
+        <div class="p-4 text-xs leading-relaxed overflow-y-auto flex-1 select-text space-y-1.5" id="terminalLogContainer">
+          <div class="text-slate-400">Listo para empezar. Presiona <strong class="text-emerald-300">Iniciar</strong> o abre un video con la extensión.</div>
         </div>
       </section>
-      <!-- END: TelemetryAndLogTerminal -->
+
+      <!-- Detalles técnicos ocultos por defecto para mantener la vista limpia -->
+      <details class="bg-[#0d1420] border border-slate-800/70 rounded-xl px-4 py-2.5 text-xs">
+        <summary class="cursor-pointer text-slate-400 hover:text-slate-200 font-medium flex items-center justify-between select-none">
+          <span>Detalles técnicos (latencia, radar 3D y GPU)</span>
+          <span class="text-[11px] text-cyan-400" id="lblLatencyMetric">-- ms</span>
+        </summary>
+        <div class="mt-3 pt-3 border-t border-slate-800/70 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-400">
+          <div class="flex flex-wrap gap-2.5">
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">◀ Izq: <span class="text-slate-500" id="pos-left-status">Inactivo</span></span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">▲ Centro: <span class="text-slate-500" id="pos-center-status">Inactivo</span></span>
+            <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800">▶ Der: <span class="text-slate-500" id="pos-right-status">Inactivo</span></span>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-slate-500">
+            <span id="lblMicHwTag">Audio 16kHz</span>
+            <span>GPU: <strong class="text-slate-300 font-medium">RTX 5060</strong></span>
+            <span>Kokoro / XTTS-v2 • NLLB-200</span>
+          </div>
+        </div>
+      </details>
     </div>
 
-    <!-- Tab View 2: Buses de Audio & Voces -->
-    <div class="hidden flex-col gap-4 flex-1" id="view-audio-buses">
-      <div class="bg-[#0E1520] border border-[#1C2C40] p-5">
-        <h3 class="text-sm font-bold text-cyan-400 tracking-wider mb-2">ENRUTAMIENTO DE DISPOSITIVOS VIRTUALES (WASAPI / VB-CABLE)</h3>
-        <p class="text-xs text-slate-400 mb-4">Configura los buses físicos y virtuales verificados en tu Windows para aislar las voces de los jugadores del sonido del juego.</p>
+    <!-- VISTA 2: Audio y Ajustes Avanzados -->
+    <div class="hidden flex-col gap-4 flex-1 max-w-5xl w-full mx-auto" id="view-audio-buses">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-amber-400 font-semibold block mb-1.5">1. Tu Micrófono Físico (Flujo 1 Entrada):</label>
-            <select id="selDevMic" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
+      <!-- Bloque 1: Tu Voz y Calidad -->
+      <section class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Voz y velocidad</h3>
+            <p class="text-xs text-slate-400">Personaliza cómo suena tu traducción y la velocidad al hablar.</p>
           </div>
+          <span id="saveToast" class="hidden text-xs text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-1 rounded-full">Guardado</span>
+        </div>
 
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-cyan-400 font-semibold block mb-1.5">2. Cable Virtual Hacia el Juego (VB-Cable Input):</label>
-            <select id="selDevCableA" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
-          </div>
-
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-emerald-400 font-semibold block mb-1.5">3. Tus Auriculares Físicos (ROG Theta / Salida 3D):</label>
-            <select id="selDevHp" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
-          </div>
-
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-indigo-400 font-semibold block mb-1.5">4. Bus Loopback Chat de Compañeros (Flujo 2 In):</label>
-            <select id="selDevTeam" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded"></select>
-          </div>
-
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-amber-400 font-semibold block mb-1.5">5. Tu Perfil de Voz Sintética (TTS Salida):</label>
-            <select id="selVoiceProfile" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded">
-              <option value="am_adam">Adam (Inglés US - Masculino Táctico)</option>
-              <option value="am_michael">Michael (Inglés US - Masculino Grave)</option>
-              <option value="bm_george">George (Inglés UK - Masculino Británico)</option>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label for="selVoiceProfile" class="block text-slate-400 mb-1.5">Tu perfil de voz</label>
+            <select id="selVoiceProfile" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl">
+              <option value="my_cloned">Mi voz natural clonada</option>
+              <option value="am_adam">Adam (Inglés US - Masculino)</option>
+              <option value="am_michael">Michael (Inglés US - Grave)</option>
+              <option value="bm_george">George (Inglés UK - Masculino)</option>
               <option value="bf_emma">Emma (Inglés UK - Femenina)</option>
-              <option value="em_alex">Alex (Español - Masculino Tenor)</option>
-              <option value="em_santa">Santa (Español - Masculino Barítono)</option>
+              <option value="em_alex">Alex (Español - Masculino)</option>
+              <option value="em_santa">Santa (Español - Barítono)</option>
               <option value="ef_dora">Dora (Español - Femenina)</option>
             </select>
           </div>
 
-          <div class="p-3 bg-[#080D14] border border-[#1E2D40] rounded">
-            <label class="text-cyan-400 font-semibold block mb-1.5">6. Modelo GPU Faster-Whisper (RTX 5060):</label>
-            <select id="selWhisperModel" class="w-full bg-[#0E1520] border border-[#26374D] text-slate-200 text-xs py-1.5 px-2 rounded">
-              <option value="tiny">tiny (~150 MB VRAM - Ultra Rápido)</option>
-              <option value="small">small (~420 MB VRAM - Recomendado RTX 5060)</option>
-              <option value="large-v3-turbo">large-v3-turbo (~1.1 GB VRAM - Máxima Precisión)</option>
+          <div>
+            <label for="selWhisperModel" class="block text-slate-400 mb-1.5">Precisión en chat en vivo (Whisper GPU)</label>
+            <select id="selWhisperModel" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl">
+              <option value="tiny">Muy rápido (menos VRAM)</option>
+              <option value="small">Equilibrado (recomendado)</option>
+              <option value="large-v3-turbo">Máxima precisión</option>
             </select>
           </div>
         </div>
 
-        <div class="mt-4 p-3 bg-[#080D14] border border-[#1E2D40] rounded flex items-center justify-between text-xs font-mono">
-          <span class="text-slate-300">7. Velocidad de Voz Traducida: <strong class="text-amber-400" id="lblSpeedVal">1.14x</strong></span>
-          <input id="rngSpeed" type="range" min="1.00" max="1.30" step="0.02" value="1.14" oninput="document.getElementById('lblSpeedVal').textContent = this.value + 'x'" class="w-64 accent-amber-500"/>
+        <div class="p-3.5 bg-[#090e17] border border-slate-800/90 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+          <span class="text-slate-300">Velocidad al hablar: <strong class="text-amber-300 font-semibold" id="lblSpeedVal">1.14x</strong></span>
+          <input id="rngSpeed" type="range" min="1.00" max="1.30" step="0.02" value="1.14"
+            oninput="document.getElementById('lblSpeedVal').textContent = this.value + 'x'"
+            onchange="saveFullConfig(true)" class="w-56 accent-amber-400"/>
+        </div>
+      </section>
+
+      <!-- Bloque 2: Motor de Videos / Doblaje Web -->
+      <section class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-semibold text-white">Motor de videos y doblaje web</h3>
+            <p class="text-xs text-slate-400">Opciones para YouTube y la extensión del navegador.</p>
+          </div>
+          <span id="xttsStatusPill" class="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 text-[11px] font-medium">Verificando...</span>
         </div>
 
-        <div class="mt-5 flex flex-wrap gap-3">
-          <button onclick="saveFullConfig()" class="clip-corner-sm px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs tracking-wider uppercase">
-            💾 GUARDAR CONFIGURACIÓN EN DISCO
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label for="selMediaTtsBackend" class="block text-slate-400 mb-1.5">Calidad de voz en videos</label>
+            <select id="selMediaTtsBackend" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl">
+              <option value="xtts_v2">Clonación natural XTTS-v2 (GPU)</option>
+              <option value="auto">Automático (XTTS + Kokoro)</option>
+              <option value="kokoro">Kokoro rápido (CPU)</option>
+            </select>
+          </div>
+          <div>
+            <label for="selMediaWhisper" class="block text-slate-400 mb-1.5">Reconocimiento de voz en videos</label>
+            <select id="selMediaWhisper" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl">
+              <option value="large-v3-turbo">Máxima precisión (large-v3-turbo)</option>
+              <option value="medium">Equilibrado (medium)</option>
+              <option value="small">Ligero (small)</option>
+              <option value="follow">Igual que chat en vivo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="space-y-2.5 text-xs pt-1">
+          <label class="pb-switch w-full text-slate-300">
+            <span>Detectar varios hablantes y clonar su voz</span>
+            <input id="chkMediaDiarization" checked onchange="saveFullConfig(true)" type="checkbox"/>
+          </label>
+          <label class="pb-switch w-full text-slate-300">
+            <span>Sincronía automática con subtítulos y audio</span>
+            <input id="chkMediaAutoSync" checked onchange="saveFullConfig(true)" type="checkbox"/>
+          </label>
+        </div>
+
+        <div class="p-3.5 bg-[#090e17] border border-slate-800/90 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+          <label for="rngMediaDelay" class="text-slate-300">Margen de sincronía manual: <strong class="text-cyan-300" id="lblMediaDelayVal">2500 ms</strong></label>
+          <input id="rngMediaDelay" type="range" min="500" max="5000" step="250" value="2500"
+            oninput="document.getElementById('lblMediaDelayVal').textContent = this.value + ' ms'"
+            onchange="saveFullConfig(true)" class="w-56 accent-cyan-400"/>
+        </div>
+
+        <div class="flex flex-wrap gap-2 pt-1">
+          <button type="button" onclick="triggerBackendAction('prewarm_xtts')"
+            class="px-3.5 py-2 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 text-xs font-medium transition-colors cursor-pointer">
+            ⚡ Precalentar XTTS
           </button>
-          <button onclick="triggerBackendAction('open_mmsys')" class="px-4 py-2 bg-[#162232] hover:bg-[#1E2E42] border border-[#2A405C] text-slate-200 text-xs font-mono rounded">
-            🔊 Abrir Panel de Sonido de Windows (mmsys.cpl)
+          <button type="button" onclick="triggerBackendAction('reset_media_speakers')"
+            class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer">
+            🔄 Reiniciar voces detectadas
+          </button>
+          <button type="button" onclick="triggerBackendAction('unload_xtts')"
+            class="px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-medium transition-colors cursor-pointer">
+            🧹 Liberar memoria GPU
           </button>
         </div>
-      </div>
+      </section>
+
+      <!-- Bloque 3: Dispositivos de Audio de Windows -->
+      <section class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 space-y-4">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Dispositivos de audio</h3>
+          <p class="text-xs text-slate-400">Elige tu micrófono, auriculares y el cable virtual hacia Discord o juegos.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label for="selDevMic" class="block text-slate-400 mb-1.5">Tu micrófono</label>
+            <select id="selDevMic" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl"></select>
+          </div>
+          <div>
+            <label for="selDevCableA" class="block text-slate-400 mb-1.5">Salida hacia juego / chat (VB-Cable)</label>
+            <select id="selDevCableA" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl"></select>
+          </div>
+          <div>
+            <label for="selDevHp" class="block text-slate-400 mb-1.5">Tus auriculares</label>
+            <select id="selDevHp" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl"></select>
+          </div>
+          <div>
+            <label for="selDevTeam" class="block text-slate-400 mb-1.5">Audio de entrada (Loopback / chat)</label>
+            <select id="selDevTeam" onchange="saveFullConfig(true)" class="w-full bg-[#090e17] border border-slate-700/80 text-slate-100 text-xs py-2 px-3 rounded-xl"></select>
+          </div>
+        </div>
+
+        <label class="pb-switch w-full text-xs text-slate-300 pt-1">
+          <span>Audio espacial 3D para ubicar hablantes (izquierda / derecha)</span>
+          <input id="chkSpatial3D" checked onchange="saveFullConfig(true)" type="checkbox"/>
+        </label>
+
+        <div class="pt-2 flex flex-wrap gap-2.5">
+          <button type="button" onclick="saveFullConfig(false)"
+            class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition-colors cursor-pointer">
+            💾 Guardar configuración
+          </button>
+          <button type="button" onclick="triggerBackendAction('open_mmsys')"
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer">
+            🔊 Panel de sonido de Windows
+          </button>
+        </div>
+      </section>
     </div>
 
-    <!-- Tab View 3: Instalador de Modelos -->
-    <div class="hidden flex-col gap-4 flex-1" id="view-model-installer">
-      <div class="bg-[#0E1520] border border-[#1C2C40] p-5">
-        <h3 class="text-sm font-bold text-emerald-400 tracking-wider mb-2">GESTOR DE MODELOS LOCALES OFFLINE E IDIOMAS</h3>
-        <p class="text-xs text-slate-400 mb-4">Pesos neuronales cuantizados (CTranslate2 INT8 + ONNX Runtime) para traducción en tiempo real sin suscripciones.</p>
+    <!-- VISTA 3: Idiomas y Modelos Offline -->
+    <div class="hidden flex-col gap-4 flex-1 max-w-5xl w-full mx-auto" id="view-model-installer">
+      <div class="bg-[#101825] border border-slate-800/80 rounded-2xl p-5 space-y-4">
+        <div>
+          <h3 class="text-sm font-semibold text-white">Modelos locales e idiomas</h3>
+          <p class="text-xs text-slate-400">Todo se ejecuta localmente en tu equipo sin cuotas ni nube externa.</p>
+        </div>
 
-        <div class="space-y-2.5 font-mono text-xs" id="modelsStatusList"></div>
+        <div class="space-y-2.5 text-xs" id="modelsStatusList"></div>
 
-        <div class="mt-5 flex flex-wrap gap-3">
-          <button onclick="triggerBackendAction('download_models')" class="clip-corner-sm px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-black font-bold text-xs tracking-wider uppercase">
-            ⬇️ VERIFICAR / DESCARGAR TODOS LOS MODELOS E IDIOMAS
+        <div class="pt-2 flex flex-wrap gap-2.5">
+          <button type="button" onclick="triggerBackendAction('download_models')"
+            class="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-xs transition-colors cursor-pointer">
+            ⬇️ Verificar / descargar modelos
           </button>
-          <button onclick="triggerBackendAction('install_vbcable')" class="px-4 py-2 bg-[#162232] hover:bg-[#1E2E42] border border-[#2A405C] text-slate-200 text-xs font-mono rounded">
-            🔌 Reinstalar Driver VB-Cable (Administrador)
+          <button type="button" onclick="triggerBackendAction('install_vbcable')"
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-medium transition-colors cursor-pointer">
+            🔌 Instalar driver VB-Cable
           </button>
         </div>
       </div>
     </div>
 
   </main>
-  <!-- END: MainContentArea -->
 
-  <!-- BEGIN: BottomStatusBar -->
-  <footer class="bg-[#06090D] border-t border-[#131D2A] px-4 py-1.5 flex items-center justify-between text-[11px] font-mono text-slate-500 select-none">
-        <div class="flex items-center space-x-3">
-      <span class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
-      <span class="text-slate-300 font-semibold">By CRESKO (Jhon Córdova)</span>
-      <span>|</span>
-      <button onclick="triggerBackendAction('open_github')" class="text-cyan-400 hover:text-cyan-300 underline cursor-pointer">GitHub @MCJ-A</button>
-      <span>|</span>
-      <button onclick="triggerBackendAction('open_linkedin')" class="text-amber-400 hover:text-amber-300 underline cursor-pointer">LinkedIn</button>
+  <!-- Pie discreto -->
+  <footer class="bg-[#080c13] border-t border-slate-800/70 px-6 py-2 flex items-center justify-between text-[11px] text-slate-500">
+    <div class="flex items-center gap-3">
+      <span class="text-slate-400">By CRESKO (Jhon Córdova)</span>
+      <span>·</span>
+      <button type="button" onclick="triggerBackendAction('open_github')" class="text-cyan-400 hover:text-cyan-300 cursor-pointer">GitHub @MCJ-A</button>
+      <span>·</span>
+      <button type="button" onclick="triggerBackendAction('open_linkedin')" class="text-amber-400 hover:text-amber-300 cursor-pointer">LinkedIn</button>
     </div>
-    <div class="flex items-center space-x-4">
-      <span class="text-slate-400">Internal DSP Clock: 16000 Hz</span>
-      <span class="text-slate-400">VAD Frame: 512 samples (32ms)</span>
-      <span class="text-amber-500">SPSC RINGBUFFER OK</span>
-    </div>
+    <span class="text-slate-500 hidden sm:inline">Atajos: Ctrl+Shift+M (Mi voz) · Ctrl+Shift+N (Escucha)</span>
   </footer>
-  <!-- END: BottomStatusBar -->
 
   <script>
     let isRunning = false;
     let lastLogIndex = 0;
     let initialLoaded = false;
+    let configDirtyUntilMs = 0;
 
-    function initVuBars(containerId, count = 28) {
+    function renderDirectionUi() {
+      const muteTx = !!document.getElementById('chkMuteTx')?.checked;
+      const muteRx = !!document.getElementById('chkMuteRx')?.checked;
+
+      const summary = document.getElementById('directionSummaryText');
+      if (summary) {
+        if (!muteTx && !muteRx) {
+          summary.textContent = 'Todo activo (tú y lo que escuchas)';
+          summary.className = 'text-sm font-medium text-emerald-300';
+        } else if (muteTx && !muteRx) {
+          summary.textContent = 'Solo escuchar (tu micrófono silenciado)';
+          summary.className = 'text-sm font-medium text-cyan-300';
+        } else if (!muteTx && muteRx) {
+          summary.textContent = 'Solo hablar (audio entrante / videos silenciados)';
+          summary.className = 'text-sm font-medium text-amber-300';
+        } else {
+          summary.textContent = 'En pausa (todo silenciado)';
+          summary.className = 'text-sm font-medium text-rose-300';
+        }
+      }
+
+      const txPill = document.getElementById('txChannelPill');
+      if (txPill) {
+        txPill.textContent = muteTx ? 'Silenciado' : 'Activo';
+        txPill.className = muteTx
+          ? 'text-[11px] font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full'
+          : 'text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full';
+      }
+
+      const rxPill = document.getElementById('rxChannelPill');
+      if (rxPill) {
+        rxPill.textContent = muteRx ? 'Silenciado' : 'Activo';
+        rxPill.className = muteRx
+          ? 'text-[11px] font-medium bg-rose-500/15 text-rose-300 border border-rose-500/30 px-2.5 py-0.5 rounded-full'
+          : 'text-[11px] font-medium bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full';
+      }
+
+      const btnStyles = [
+        ['btnDirBoth', !muteTx && !muteRx, 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'],
+        ['btnDirRxOnly', muteTx && !muteRx, 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40'],
+        ['btnDirTxOnly', !muteTx && muteRx, 'bg-amber-500/20 text-amber-300 border-amber-500/40'],
+        ['btnDirMuteAll', muteTx && muteRx, 'bg-rose-500/20 text-rose-300 border-rose-500/40']
+      ];
+      for (const [id, active, activeCls] of btnStyles) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.className = `px-3 py-1.5 rounded-xl text-xs font-medium border transition-colors cursor-pointer ${
+          active ? activeCls : 'bg-slate-800/70 text-slate-300 border-slate-700 hover:border-slate-500'
+        }`;
+        el.setAttribute('aria-pressed', active ? 'true' : 'false');
+      }
+    }
+
+    async function setDirectionMode(muteTx, muteRx) {
+      document.getElementById('chkMuteTx').checked = !!muteTx;
+      document.getElementById('chkMuteRx').checked = !!muteRx;
+      renderDirectionUi();
+      configDirtyUntilMs = Date.now() + 1800;
+      await saveFullConfig(true);
+    }
+
+    function initVuBars(containerId, count = 24) {
       const container = document.getElementById(containerId);
       if (!container) return;
       container.innerHTML = '';
       for (let i = 0; i < count; i++) {
         const bar = document.createElement('div');
-        bar.className = 'flex-1 h-full bg-[#182333] transition-colors duration-75';
+        bar.className = 'flex-1 h-full rounded-full bg-slate-800/90 transition-colors duration-75';
         bar.id = `${containerId}-bar-${i}`;
         container.appendChild(bar);
       }
     }
 
     function updateMeterFromDb(containerId, textId, dbValue, activeHex) {
-      const count = 28;
+      const count = 24;
       const clampedDb = Math.max(-60.0, Math.min(0.0, dbValue));
       const ratio = (dbValue <= -59.5) ? 0.0 : (clampedDb + 60.0) / 60.0;
       const activeCount = Math.floor(ratio * count);
@@ -436,11 +619,11 @@
         const bar = document.getElementById(`${containerId}-bar-${i}`);
         if (!bar) continue;
         if (i < activeCount) {
-          if (i > count * 0.85) bar.style.backgroundColor = '#ef4444';
+          if (i > count * 0.85) bar.style.backgroundColor = '#fb7185';
           else if (i > count * 0.65) bar.style.backgroundColor = '#fbbf24';
           else bar.style.backgroundColor = activeHex;
         } else {
-          bar.style.backgroundColor = '#182333';
+          bar.style.backgroundColor = 'rgba(30, 41, 59, 0.85)';
         }
       }
     }
@@ -455,45 +638,48 @@
       const statusDot = document.getElementById('statusIndicatorDot');
 
       if (loading) {
-        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-700/60 bg-amber-950/40 text-[10px] font-mono tracking-widest text-amber-400';
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-amber-500/40 bg-amber-500/15 text-[11px] font-medium text-amber-300';
         statusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-        statusText.textContent = 'CARGANDO IA...';
-        btnLabel.textContent = 'INICIALIZANDO...';
+        statusText.textContent = 'Iniciando IA...';
+        btnLabel.textContent = 'Cargando...';
         return;
       }
 
       if (running) {
-        btn.className = 'clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-red-600 hover:bg-red-500 text-white border border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+        btn.className = 'px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2 bg-rose-500 hover:bg-rose-400 text-white shadow-sm cursor-pointer';
         btnIcon.textContent = '■';
-        btnLabel.textContent = 'DETENER PROTOBRIDGE';
+        btnLabel.textContent = 'Detener';
 
-        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-emerald-900/60 bg-emerald-950/40 text-[10px] font-mono tracking-widest text-emerald-400';
-        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
-        statusText.textContent = 'ACTIVO EN LÍNEA';
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 text-[11px] font-medium text-emerald-300';
+        statusDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+        statusText.textContent = 'En vivo';
       } else {
-        btn.className = 'clip-corner-sm px-5 py-2 font-hud tracking-widest text-sm font-bold uppercase transition-all duration-200 flex items-center gap-2.5 bg-[#00A86B] hover:bg-[#00c57d] text-black shadow-[0_0_15px_rgba(0,168,107,0.35)] border border-[#00ff9d]';
+        btn.className = 'px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-150 flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-sm cursor-pointer';
         btnIcon.textContent = '▶';
-        btnLabel.textContent = 'ENCENDER PROTOBRIDGE';
+        btnLabel.textContent = 'Iniciar';
 
-        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-red-900/60 bg-red-950/40 text-[10px] font-mono tracking-widest text-red-400';
-        statusDot.className = 'w-2 h-2 rounded-full bg-red-500 animate-pulse';
-        statusText.textContent = 'DETENIDO';
+        statusBadge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-slate-700 bg-slate-800/80 text-[11px] font-medium text-slate-300';
+        statusDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        statusText.textContent = 'Listo';
       }
     }
 
     async function toggleEngineState() {
       await saveFullConfig(true);
-      await fetch('/api/toggle', { method: 'POST' });
+      await fetch('/api/toggle', {
+        method: 'POST',
+        headers: { 'X-ProtoBridge-Client': 'WebUI' }
+      });
     }
 
     function addLogEntry(message, type = 'slate') {
       const container = document.getElementById('terminalLogContainer');
       if (!container) return;
       const line = document.createElement('div');
-      if (type === 'emerald' || type === 'rx') line.className = 'text-emerald-400 font-semibold';
-      else if (type === 'cyan' || type === 'tx') line.className = 'text-cyan-400';
-      else if (type === 'amber' || type === 'sys') line.className = 'text-amber-400/90';
-      else if (type === 'red' || type === 'err') line.className = 'text-red-500 font-bold';
+      if (type === 'emerald' || type === 'rx') line.className = 'text-cyan-300 font-medium';
+      else if (type === 'cyan' || type === 'tx') line.className = 'text-amber-300';
+      else if (type === 'amber' || type === 'sys') line.className = 'text-slate-400';
+      else if (type === 'red' || type === 'err') line.className = 'text-rose-400 font-semibold';
       else line.className = 'text-slate-300';
 
       line.textContent = message;
@@ -505,7 +691,7 @@
       const container = document.getElementById('terminalLogContainer');
       if (container) {
         container.innerHTML = '';
-        addLogEntry('[SISTEMA] Registro reiniciado.', 'sys');
+        addLogEntry('Historial limpiado.', 'sys');
       }
     }
 
@@ -515,11 +701,11 @@
         const btn = document.getElementById(`tab-${id}`);
         const view = document.getElementById(`view-${id}`);
         if (id === tabId) {
-          btn.className = 'px-4 py-2 border-b-2 border-amber-500 text-amber-400 bg-[#121B27]/80 text-xs font-semibold tracking-wider flex items-center gap-2 transition-all';
+          btn.className = 'px-4 py-2 rounded-t-xl text-xs font-semibold text-white bg-[#111927] border border-b-0 border-slate-800/80 transition-colors cursor-pointer';
           if (view) view.classList.remove('hidden');
           if (view) view.classList.add('flex');
         } else {
-          btn.className = 'px-4 py-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 hover:bg-[#0E1520] text-xs font-semibold tracking-wider flex items-center gap-2 transition-all';
+          btn.className = 'px-4 py-2 rounded-t-xl text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer';
           if (view) view.classList.add('hidden');
           if (view) view.classList.remove('flex');
         }
@@ -542,10 +728,13 @@
     }
 
     async function pushLiveConfig() {
+      renderDirectionUi();
+      configDirtyUntilMs = Date.now() + 1800;
       await saveFullConfig(true);
     }
 
     async function saveFullConfig(silent = false) {
+      configDirtyUntilMs = Date.now() + 1800;
       const payload = {
         my_source_lang: document.getElementById('selMySrc').value,
         my_target_lang: document.getElementById('selMyTgt').value,
@@ -555,6 +744,12 @@
         monitor_own_voice: document.getElementById('chkMonitorTx').checked,
         mute_rx: document.getElementById('chkMuteRx').checked,
         spatial_3d: document.getElementById('chkSpatial3D').checked,
+        media_mode_enabled: document.getElementById('chkMediaMode').checked,
+        media_auto_sync: document.getElementById('chkMediaAutoSync').checked,
+        media_delay_ms: parseInt(document.getElementById('rngMediaDelay').value || '2500', 10),
+        media_tts_backend: document.getElementById('selMediaTtsBackend').value,
+        media_whisper_model_size: document.getElementById('selMediaWhisper').value,
+        media_diarization_enabled: document.getElementById('chkMediaDiarization').checked,
         mic_device_name: document.getElementById('selDevMic').value,
         cable_a_device_name: document.getElementById('selDevCableA').value,
         headphones_device_name: document.getElementById('selDevHp').value,
@@ -566,15 +761,28 @@
       };
       await fetch('/api/config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-ProtoBridge-Client': 'WebUI'
+        },
         body: JSON.stringify(payload)
       });
+      if (!silent) {
+        const toast = document.getElementById('saveToast');
+        if (toast) {
+          toast.classList.remove('hidden');
+          setTimeout(() => toast.classList.add('hidden'), 1800);
+        }
+      }
     }
 
     async function triggerBackendAction(actionName) {
       await fetch('/api/action', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-ProtoBridge-Client': 'WebUI'
+        },
         body: JSON.stringify({ action: actionName })
       });
     }
@@ -585,16 +793,16 @@
       container.innerHTML = '';
       models.forEach(m => {
         const badgeClass = m.ready
-          ? 'px-2 py-1 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] rounded'
-          : 'px-2 py-1 bg-amber-950 text-amber-400 border border-amber-800 text-[10px] rounded';
+          ? 'px-2.5 py-0.5 bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[11px] font-medium rounded-full'
+          : 'px-2.5 py-0.5 bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[11px] font-medium rounded-full';
         const row = document.createElement('div');
-        row.className = 'p-3 bg-[#080D14] border border-[#1E2D40] flex items-center justify-between';
+        row.className = 'p-3.5 bg-[#090e17] border border-slate-800/80 rounded-xl flex items-center justify-between';
         row.innerHTML = `
           <div>
-            <div class="text-slate-200 font-bold">${m.title}</div>
-            <div class="text-slate-500 text-[11px]">${m.subtitle}</div>
+            <div class="text-slate-100 font-medium">${m.title}</div>
+            <div class="text-slate-400 text-[11px]">${m.subtitle}</div>
           </div>
-          <span class="${badgeClass}">${m.ready ? 'LISTO' : 'PENDIENTE'}</span>
+          <span class="${badgeClass}">${m.ready ? 'Instalado' : 'Pendiente'}</span>
         `;
         container.appendChild(row);
       });
@@ -606,8 +814,8 @@
         const data = await res.json();
 
         applyVisualRunningState(data.running, data.loading);
-        updateMeterFromDb('micVuBars', 'micDbText', data.mic_db, '#f59e0b');
-        updateMeterFromDb('chatVuBars', 'chatDbText', data.chat_db, '#00e5ff');
+        updateMeterFromDb('micVuBars', 'micDbText', data.mic_db, '#fbbf24');
+        updateMeterFromDb('chatVuBars', 'chatDbText', data.chat_db, '#38bdf8');
 
         if (data.last_latency_ms > 0) {
           document.getElementById('lblLatencyMetric').textContent = `${data.last_latency_ms} ms`;
@@ -618,15 +826,15 @@
         const posR = document.getElementById('pos-right-status');
         if (posL) {
           posL.textContent = data.radar.left;
-          posL.className = data.radar.left !== 'Inactivo' ? 'text-cyan-400 font-bold' : 'text-slate-500';
+          posL.className = data.radar.left !== 'Inactivo' ? 'text-cyan-300 font-medium' : 'text-slate-500';
         }
         if (posC) {
           posC.textContent = data.radar.center;
-          posC.className = data.radar.center !== 'Inactivo' ? 'text-amber-400 font-bold' : 'text-slate-500';
+          posC.className = data.radar.center !== 'Inactivo' ? 'text-amber-300 font-medium' : 'text-slate-500';
         }
         if (posR) {
           posR.textContent = data.radar.right;
-          posR.className = data.radar.right !== 'Inactivo' ? 'text-emerald-400 font-bold' : 'text-slate-500';
+          posR.className = data.radar.right !== 'Inactivo' ? 'text-emerald-300 font-medium' : 'text-slate-500';
         }
 
         if (data.logs && data.logs.length > 0) {
@@ -650,10 +858,42 @@
           document.getElementById('chkMuteTx').checked = !!data.config.mute_tx;
           document.getElementById('chkMonitorTx').checked = !!data.config.monitor_own_voice;
           document.getElementById('chkMuteRx').checked = !!data.config.mute_rx;
+          document.getElementById('chkMediaMode').checked = !!data.config.media_mode_enabled;
+          document.getElementById('chkMediaAutoSync').checked = data.config.media_auto_sync !== false;
+          document.getElementById('rngMediaDelay').value = data.config.media_delay_ms || 2500;
+          document.getElementById('lblMediaDelayVal').textContent = (data.config.media_delay_ms || 2500) + ' ms';
+          document.getElementById('selMediaTtsBackend').value = data.config.media_tts_backend || 'xtts_v2';
+          document.getElementById('selMediaWhisper').value = data.config.media_whisper_model_size || 'large-v3-turbo';
+          document.getElementById('chkMediaDiarization').checked = data.config.media_diarization_enabled !== false;
           document.getElementById('selVoiceProfile').value = data.config.my_voice_profile || 'am_adam';
           document.getElementById('selWhisperModel').value = data.config.whisper_model_size || 'small';
           document.getElementById('rngSpeed').value = data.config.tts_speed_in || 1.14;
           document.getElementById('lblSpeedVal').textContent = (data.config.tts_speed_in || 1.14) + 'x';
+          renderDirectionUi();
+        } else if (data.config && Date.now() > configDirtyUntilMs) {
+          const chkTx = document.getElementById('chkMuteTx');
+          const chkRx = document.getElementById('chkMuteRx');
+          const nextTx = !!data.config.mute_tx;
+          const nextRx = !!data.config.mute_rx;
+          if (chkTx.checked !== nextTx || chkRx.checked !== nextRx) {
+            chkTx.checked = nextTx;
+            chkRx.checked = nextRx;
+            renderDirectionUi();
+          }
+        }
+
+        const xttsPill = document.getElementById('xttsStatusPill');
+        if (xttsPill) {
+          if (data.xtts_running) {
+            xttsPill.textContent = 'XTTS Activo (GPU)';
+            xttsPill.className = 'px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium';
+          } else if (data.xtts_available) {
+            xttsPill.textContent = 'XTTS Listo';
+            xttsPill.className = 'px-2.5 py-1 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-medium';
+          } else {
+            xttsPill.textContent = 'Usando Kokoro CPU';
+            xttsPill.className = 'px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-medium';
+          }
         }
 
         renderModelsStatus(data.models_status);
@@ -661,12 +901,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      initVuBars('micVuBars', 28);
-      initVuBars('chatVuBars', 28);
+      initVuBars('micVuBars', 24);
+      initVuBars('chatVuBars', 24);
       pollBackendState();
       setInterval(pollBackendState, 110);
     });
   </script>
 </body>
 </html>
-

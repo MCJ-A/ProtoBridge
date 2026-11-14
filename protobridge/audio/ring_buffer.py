@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 from dataclasses import dataclass
+import gc
 from multiprocessing import shared_memory
 import numpy as np
 from numpy.typing import NDArray
@@ -45,7 +46,7 @@ class SPSCRingBuffer:
                 stale.unlink()
             except FileNotFoundError:
                 pass
-            self._shm = shared_memory.SharedMemory(
+            self._shm: shared_memory.SharedMemory | None = shared_memory.SharedMemory(
                 name=self.name, create=True, size=self._total_bytes
             )
         else:
@@ -65,25 +66,43 @@ class SPSCRingBuffer:
             self._header[:] = 0
             self._buffer[:] = 0.0
 
+    def _clamped_cursors(self) -> tuple[int, int, bool]:
+        w: int = int(self._header[0])
+        r: int = int(self._header[1])
+        clamped: bool = (w - r) > self.capacity
+        if clamped:
+            r = w - self.capacity
+        return w, r, clamped
+
+    def _copy_from_ring(self, start_cursor: int, count: int, out: NDArray[np.float32]) -> None:
+        start_idx: int = start_cursor % self.capacity
+        first_part: int = min(count, self.capacity - start_idx)
+        out[:first_part] = self._buffer[start_idx : start_idx + first_part]
+
+        second_part: int = count - first_part
+        if second_part > 0:
+            out[first_part:count] = self._buffer[0:second_part]
+
     @property
     def write_cursor(self) -> int:
         return int(self._header[0])
 
     @property
     def read_cursor(self) -> int:
-        return int(self._header[1])
+        _, r, _ = self._clamped_cursors()
+        return r
 
     @property
     def available_to_read(self) -> int:
-        return max(0, int(self._header[0] - self._header[1]))
+        w, r, _ = self._clamped_cursors()
+        return max(0, w - r)
 
     @property
     def available_to_write(self) -> int:
         return max(0, self.capacity - self.available_to_read)
 
     def stats(self) -> RingBufferStats:
-        w = int(self._header[0])
-        r = int(self._header[1])
+        w, r, _ = self._clamped_cursors()
         avail_r = max(0, w - r)
         return RingBufferStats(
             capacity_samples=self.capacity,
@@ -108,7 +127,6 @@ class SPSCRingBuffer:
 
         overflow: int = (w + n) - (r + self.capacity)
         if overflow > 0:
-            self._header[1] = r + overflow
             self._header[2] += 1
 
         start_idx: int = w % self.capacity
@@ -124,20 +142,14 @@ class SPSCRingBuffer:
 
     def read_into(self, out: NDArray[np.float32]) -> int:
         requested: int = int(out.shape[0])
-        w: int = int(self._header[0])
-        r: int = int(self._header[1])
+        w, r, clamped = self._clamped_cursors()
         avail: int = max(0, w - r)
         to_read: int = min(requested, avail)
 
         if to_read > 0:
-            start_idx: int = r % self.capacity
-            first_part: int = min(to_read, self.capacity - start_idx)
-            out[:first_part] = self._buffer[start_idx : start_idx + first_part]
+            self._copy_from_ring(r, to_read, out)
 
-            second_part: int = to_read - first_part
-            if second_part > 0:
-                out[first_part:to_read] = self._buffer[0:second_part]
-
+        if to_read > 0 or clamped:
             self._header[1] = r + to_read
 
         if to_read < requested:
@@ -146,6 +158,16 @@ class SPSCRingBuffer:
                 self._header[3] += 1
 
         return to_read
+
+    def read_all(self) -> NDArray[np.float32]:
+        w, r, clamped = self._clamped_cursors()
+        avail: int = max(0, w - r)
+        out: NDArray[np.float32] = np.empty((avail,), dtype=np.float32)
+        if avail > 0:
+            self._copy_from_ring(r, avail, out)
+        if avail > 0 or clamped:
+            self._header[1] = r + avail
+        return out
 
     def slice_window(
         self, start_cursor: int, end_cursor: int, preroll_samples: int = 4800
@@ -160,20 +182,28 @@ class SPSCRingBuffer:
         if total == 0:
             return result
 
-        start_idx: int = actual_start % self.capacity
-        first_part: int = min(total, self.capacity - start_idx)
-        result[:first_part] = self._buffer[start_idx : start_idx + first_part]
-
-        second_part: int = total - first_part
-        if second_part > 0:
-            result[first_part:] = self._buffer[0:second_part]
-
+        self._copy_from_ring(actual_start, total, result)
         return result
 
     def close(self) -> None:
-        self._shm.close()
+        if hasattr(self, "_header"):
+            del self._header
+        if hasattr(self, "_buffer"):
+            del self._buffer
+
+        shm = getattr(self, "_shm", None)
+        if shm is None:
+            return
+
+        self._shm = None
+        try:
+            shm.close()
+        except BufferError:
+            gc.collect()
+            shm.close()
+
         if self._owner:
             try:
-                self._shm.unlink()
+                shm.unlink()
             except FileNotFoundError:
                 pass
