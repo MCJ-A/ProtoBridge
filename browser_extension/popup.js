@@ -63,7 +63,7 @@ function setDesktopChannels(muteTx, muteRx) {
     (resp) => {
       if (chrome.runtime.lastError || !resp || !resp.ok || !resp.data) {
         statusBox.className = "status-box status-err";
-        statusText.textContent = "No se detecta ProtoBridge abierto";
+        statusText.textContent = "No se detecta Ignait abierto";
         return;
       }
       renderDesktopChannels(Boolean(resp.data.mute_tx), Boolean(resp.data.mute_rx));
@@ -74,11 +74,11 @@ function setDesktopChannels(muteTx, muteRx) {
 
 function pingDesktopEngine() {
   statusBox.className = "status-box";
-  statusText.textContent = "Conectando con ProtoBridge...";
+  statusText.textContent = "Conectando con Ignait...";
   chrome.runtime.sendMessage({ type: "PB_PING" }, (resp) => {
     if (chrome.runtime.lastError || !resp || !resp.ok) {
       statusBox.className = "status-box status-err";
-      statusText.textContent = "No se detecta ProtoBridge abierto";
+      statusText.textContent = "No se detecta Ignait abierto";
       return;
     }
     const info = resp.data || {};

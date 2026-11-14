@@ -13,7 +13,7 @@ import onnxruntime as ort
 import soxr
 from kokoro_onnx import Kokoro
 
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -13,9 +13,9 @@ from numpy.typing import NDArray
 import pyaudiowpatch as pyaudio
 import soxr
 
-from protobridge.audio.devices import AudioEndpoint
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.system.os_priority import mmcss_pro_audio
+from ignait.audio.devices import AudioEndpoint
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.system.os_priority import mmcss_pro_audio
 
 logger = logging.getLogger(__name__)
 

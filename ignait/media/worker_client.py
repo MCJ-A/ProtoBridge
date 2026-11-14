@@ -18,7 +18,7 @@ from typing import Any, Callable
 import numpy as np
 from numpy.typing import NDArray
 
-from protobridge.paths import get_media_tts_python, get_xtts_models_dir, get_xtts_worker_script
+from ignait.paths import get_media_tts_python, get_xtts_models_dir, get_xtts_worker_script
 
 
 def _read_exact_http(resp: http.client.HTTPResponse, size: int) -> bytes:

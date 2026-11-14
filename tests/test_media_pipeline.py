@@ -17,21 +17,21 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 
-from protobridge.config import AppConfig
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
-from protobridge.gui import CONTROLLER, StitchHTTPHandler
-from protobridge.media.session import (
+from ignait.config import AppConfig
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.gui import CONTROLLER, StitchHTTPHandler
+from ignait.media.session import (
     compute_auto_paced_speed,
     sanitize_media_text,
     update_ewma_latency,
 )
-from protobridge.media.speaker_bank import (
+from ignait.media.speaker_bank import (
     FEMALE_PRESET_POOL,
     MALE_PRESET_POOL,
     MediaSpeakerVoiceBank,
 )
-from protobridge.media.stream_buffer import InMemoryAudioRingBuffer
-from protobridge.media.ws_protocol import (
+from ignait.media.stream_buffer import InMemoryAudioRingBuffer
+from ignait.media.ws_protocol import (
     OPCODE_BINARY,
     OPCODE_CLOSE,
     OPCODE_CONTINUATION,
@@ -43,7 +43,7 @@ from protobridge.media.ws_protocol import (
     pack_media_binary_packet,
     unpack_media_binary_packet,
 )
-from protobridge.paths import get_models_dir
+from ignait.paths import get_models_dir
 
 
 def _build_masked_client_frame(
@@ -626,7 +626,7 @@ class TestMediaPipelineComponents(unittest.TestCase):
                 patch.object(CONTROLLER, "_ensure_ai_engines", return_value=(fake_stt, fake_mt, fake_tts)),
                 patch.object(CONTROLLER._media_service, "xtts_client", fake_xtts),
                 patch(
-                    "protobridge.vad.silero.SileroVADSegmenter.process_available",
+                    "ignait.vad.silero.SileroVADSegmenter.process_available",
                     side_effect=[[male_seg], [], [], []],
                 ),
             ):
@@ -1224,7 +1224,7 @@ assert(
   "startAt debe estar en tiempo real (~100.5s), recibido: " + scheduledStarts[0].at
 );
 
-// 6) rx_mute_state desde ProtoBridge Studio silencia doblaje y devuelve delay a 0s; al quitar RX mute reanuda
+// 6) rx_mute_state desde Ignait Studio silencia doblaje y devuelve delay a 0s; al quitar RX mute reanuda
 fakePort.emit({
   type: "ws_json",
   data: { type: "rx_mute_state", rx_muted: true },
@@ -1347,7 +1347,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": ext_origin,
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                     },
                 )
                 resp = conn.getresponse()
@@ -1366,7 +1366,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": ext_origin,
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                         "Content-Type": "application/json",
                     },
                 )
@@ -1387,7 +1387,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": ext_origin,
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                         "Content-Type": "application/json",
                     },
                 )
@@ -1405,7 +1405,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": "https://evil.com",
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                         "Content-Type": "application/json",
                     },
                 )
@@ -1423,7 +1423,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": f"http://127.0.0.1:{port}",
-                        "X-ProtoBridge-Client": "WebUI",
+                        "X-Ignait-Client": "WebUI",
                         "Content-Type": "application/json",
                     },
                 )
@@ -1746,7 +1746,7 @@ assert.strictEqual(scheduledStarts.length, 2, "chunk válido tras quitar RX mute
                     headers={
                         "Host": f"127.0.0.1:{port}",
                         "Origin": ext_origin,
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                         "Content-Type": "application/json",
                     },
                 )

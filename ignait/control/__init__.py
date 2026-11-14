@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from protobridge.control.hotkeys import GlobalHotkeyListener
+from ignait.control.hotkeys import GlobalHotkeyListener
 
 __all__ = ["GlobalHotkeyListener"]

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "ProtoBridge Media Translator (GPU Local)",
+  "name": "Ignait Media Translator (GPU Local)",
   "version": "2.0.0",
-  "description": "Captura audio y subtítulos en tiempo real por WebSocket binario/AudioWorklet usando ProtoBridge Studio (XTTS-v2 GPU + CAM++ + Whisper) con Smart Ducking.",
+  "description": "Captura audio y subtítulos en tiempo real por WebSocket binario/AudioWorklet usando Ignait Studio (XTTS-v2 GPU + CAM++ + Whisper) con Smart Ducking.",
   "permissions": [
     "storage",
     "activeTab",
@@ -18,7 +18,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ProtoBridge Media Bridge"
+    "default_title": "Ignait Media Bridge"
   },
   "content_scripts": [
     {

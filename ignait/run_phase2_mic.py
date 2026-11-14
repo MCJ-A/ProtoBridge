@@ -1,21 +1,21 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 from pathlib import Path
 import time
 import pyaudiowpatch as pyaudio
 
-from protobridge.audio.devices import WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
-from protobridge.stt.whisper_engine import WhisperTranslatorEngine
-from protobridge.tts.kokoro_engine import KokoroTTSEngine
-from protobridge.vad.silero import SileroVADSegmenter
+from ignait.audio.devices import WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
+from ignait.stt.whisper_engine import WhisperTranslatorEngine
+from ignait.tts.kokoro_engine import KokoroTTSEngine
+from ignait.vad.silero import SileroVADSegmenter
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="ProtoBridge Fase 2: Flujo 1 (Tu Micrófono Español -> Inglés hacia el Juego)"
+        description="Ignait Fase 2: Flujo 1 (Tu Micrófono Español -> Inglés hacia el Juego)"
     )
     parser.add_argument(
         "--no-monitor",
@@ -39,7 +39,7 @@ def main() -> None:
         raise RuntimeError("No se encontró CABLE Input (VB-Audio Virtual Cable).")
 
     print("=" * 80)
-    print(" PROTOBRIDGE - FASE 2: TRADUCTOR DE MICROFONO EN VIVO (ESPAÑOL -> INGLES)")
+    print(" IGNAIT - FASE 2: TRADUCTOR DE MICROFONO EN VIVO (ESPAÑOL -> INGLES)")
     print("=" * 80)
     print(f" [Entrada Micrófono] : {topology.physical_mic.name}")
     print(f" [Salida al Juego]   : {topology.virtual_mic_sink_cable_a.name}")
@@ -54,7 +54,7 @@ def main() -> None:
     tts = KokoroTTSEngine(models_dir=models_dir, default_voice=args.voice)
 
     rb_mic = SPSCRingBuffer(
-        name="protobridge_mic_phase2", capacity_seconds=30.0, sample_rate=16000, create=True
+        name="ignait_mic_phase2", capacity_seconds=30.0, sample_rate=16000, create=True
     )
     pa = pyaudio.PyAudio()
 

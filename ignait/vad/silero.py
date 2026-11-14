@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 import time
@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 import onnxruntime as ort
 
-from protobridge.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.ring_buffer import SPSCRingBuffer
 
 SILERO_ONNX_URL = (
     "https://raw.githubusercontent.com/snakers4/silero-vad/master/src/silero_vad/data/silero_vad.onnx"

@@ -1,4 +1,4 @@
-﻿name: ProtoBridge CI
+name: Ignait CI
 
 on:
   push:

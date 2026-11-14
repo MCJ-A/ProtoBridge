@@ -7,13 +7,13 @@ import numpy as np
 from numpy.typing import NDArray
 import pyaudiowpatch as pyaudio
 
-from protobridge.audio.devices import AudioEndpoint, WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
-from protobridge.config import AppConfig
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
-from protobridge.tts.kokoro_engine import KokoroTTSEngine
-from protobridge.vad.silero import SileroVADSegmenter
+from ignait.audio.devices import AudioEndpoint, WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
+from ignait.config import AppConfig
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.tts.kokoro_engine import KokoroTTSEngine
+from ignait.vad.silero import SileroVADSegmenter
 
 
 def calibrate_user_voice(duration_seconds: float = 6.0, config_path: Path = Path("config.json")) -> float:
@@ -49,7 +49,7 @@ def calibrate_user_voice(duration_seconds: float = 6.0, config_path: Path = Path
         raise RuntimeError("No se detectaron los auriculares físicos para el feedback acústico.")
 
     print("=" * 76)
-    print(" PROTOBRIDGE - CALIBRACIÓN DE VOZ SIGILOSA (STEALTH VOICE CLONER)")
+    print(" IGNAIT - CALIBRACIÓN DE VOZ SIGILOSA (STEALTH VOICE CLONER)")
     print("=" * 76)
     print(f" Micrófono : {mic.name}")
     print(f" Salida    : {headphones.name}")
@@ -63,7 +63,7 @@ def calibrate_user_voice(duration_seconds: float = 6.0, config_path: Path = Path
         time.sleep(1.0)
     print("\n [GRABANDO] ¡Habla ahora!...                                         ")
 
-    rb = SPSCRingBuffer(name="protobridge_calib_rb", capacity_seconds=15.0, sample_rate=16000, create=True)
+    rb = SPSCRingBuffer(name="ignait_calib_rb", capacity_seconds=15.0, sample_rate=16000, create=True)
     pa = pyaudio.PyAudio()
     mic_stream = WASAPIInputStream(pa=pa, endpoint=mic, ring_buffer=rb)
     vad = SileroVADSegmenter(models_dir=models_dir, speech_threshold=0.45, min_silence_ms=200)
@@ -118,7 +118,7 @@ def calibrate_user_voice(duration_seconds: float = 6.0, config_path: Path = Path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ProtoBridge Voice Calibration Tool")
+    parser = argparse.ArgumentParser(description="Ignait Voice Calibration Tool")
     parser.add_argument("--duration", type=float, default=6.0, help="Duración de captura en segundos (default: 6.0)")
     parser.add_argument("--config", type=Path, default=Path("config.json"), help="Ruta al config.json")
     args = parser.parse_args()

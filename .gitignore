@@ -1,4 +1,4 @@
-﻿# Entornos virtuales y cachés de Python
+# Entornos virtuales y cachés de Python
 .venv/
 .venv-media-tts/
 venv/
@@ -16,7 +16,7 @@ dist/
 *.pem
 *.key
 
-# Pesos de Modelos IA (se descargan automáticamente con protobridge.auto_setup)
+# Pesos de Modelos IA (se descargan automáticamente con ignait.auto_setup)
 models/
 *.onnx
 *.bin

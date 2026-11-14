@@ -1,10 +1,10 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 import json
 from pathlib import Path
 
-from protobridge.paths import get_config_path
+from ignait.paths import get_config_path
 
 CONFIG_PATH = get_config_path()
 

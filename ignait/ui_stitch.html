@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="h-full select-none" lang="es">
 <head>
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>ProtoBridge Studio</title>
+  <title>Ignait Studio</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <style>
     :root { color-scheme: dark; }
@@ -90,7 +90,7 @@
       </div>
       <div>
         <div class="flex items-center gap-2.5">
-          <h1 class="text-lg font-semibold tracking-tight text-white">ProtoBridge</h1>
+          <h1 class="text-lg font-semibold tracking-tight text-white">Ignait</h1>
           <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-slate-700 bg-slate-800/80 text-[11px] font-medium text-slate-300" id="statusBadge">
             <span class="w-2 h-2 rounded-full bg-slate-400" id="statusIndicatorDot"></span>
             <span id="statusBadgeText">Listo</span>
@@ -668,7 +668,7 @@
       await saveFullConfig(true);
       await fetch('/api/toggle', {
         method: 'POST',
-        headers: { 'X-ProtoBridge-Client': 'WebUI' }
+        headers: { 'X-Ignait-Client': 'WebUI' }
       });
     }
 
@@ -763,7 +763,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-ProtoBridge-Client': 'WebUI'
+          'X-Ignait-Client': 'WebUI'
         },
         body: JSON.stringify(payload)
       });
@@ -781,7 +781,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-ProtoBridge-Client': 'WebUI'
+          'X-Ignait-Client': 'WebUI'
         },
         body: JSON.stringify({ action: actionName })
       });

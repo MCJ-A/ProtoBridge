@@ -479,7 +479,7 @@ def _start_parent_stdin_watchdog(shutdown_event: threading.Event) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="ProtoBridge Isolated XTTS-v2 GPU Worker")
+    parser = argparse.ArgumentParser(description="Ignait Isolated XTTS-v2 GPU Worker")
     parser.add_argument("--models-dir", type=Path, required=True)
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--no-fp16", action="store_true")

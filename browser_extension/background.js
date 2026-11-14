@@ -17,7 +17,7 @@ async function pingPort(port) {
     {
       method: "GET",
       headers: {
-        "X-ProtoBridge-Client": "BrowserExtension"
+        "X-Ignait-Client": "BrowserExtension"
       }
     },
     900
@@ -27,7 +27,7 @@ async function pingPort(port) {
   }
   const data = await resp.json();
   if (!data || !data.ok) {
-    throw new Error("Respuesta inválida de ProtoBridge");
+    throw new Error("Respuesta inválida de Ignait");
   }
   return data;
 }
@@ -45,7 +45,7 @@ async function findActivePort() {
   }
   return {
     ok: false,
-    error: "No se detectó ProtoBridge.exe ejecutándose en 127.0.0.1:8770-8776."
+    error: "No se detectó Ignait.exe ejecutándose en 127.0.0.1:8770-8776."
   };
 }
 
@@ -56,7 +56,7 @@ async function postMediaEndpoint(port, path, payload, timeoutMs = 18000) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-ProtoBridge-Client": "BrowserExtension"
+        "X-Ignait-Client": "BrowserExtension"
       },
       body: JSON.stringify(payload || {})
     },
@@ -150,7 +150,7 @@ chrome.runtime.onConnect.addListener((port) => {
     try {
       const found = await findActivePort();
       if (!found.ok || disconnected) {
-        safePost({ type: "ws_error", error: found.error || "ProtoBridge no detectado" });
+        safePost({ type: "ws_error", error: found.error || "Ignait no detectado" });
         return;
       }
 

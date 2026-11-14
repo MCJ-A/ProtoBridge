@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -7,9 +7,9 @@ import time
 from typing import Optional
 import pyaudiowpatch as pyaudio
 
-from protobridge.audio.devices import AudioEndpoint, WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import (
+from ignait.audio.devices import AudioEndpoint, WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import (
     AsyncOutputWorker,
     MediaLookaheadBuffer,
     PlaybackItem,
@@ -17,14 +17,14 @@ from protobridge.audio.streams import (
     WASAPIInputStream,
     WASAPIOutputPlayer,
 )
-from protobridge.config import AppConfig
-from protobridge.control.hotkeys import GlobalHotkeyListener
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
-from protobridge.mt.translator import TacticalTranslatorEngine
-from protobridge.stt.whisper_engine import WhisperTranslatorEngine
-from protobridge.system.os_priority import set_high_process_priority
-from protobridge.tts.kokoro_engine import KokoroTTSEngine
-from protobridge.vad.silero import SileroVADSegmenter
+from ignait.config import AppConfig
+from ignait.control.hotkeys import GlobalHotkeyListener
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.mt.translator import TacticalTranslatorEngine
+from ignait.stt.whisper_engine import WhisperTranslatorEngine
+from ignait.system.os_priority import set_high_process_priority
+from ignait.tts.kokoro_engine import KokoroTTSEngine
+from ignait.vad.silero import SileroVADSegmenter
 
 
 def _resolve_device(
@@ -55,7 +55,7 @@ def main() -> None:
     set_high_process_priority()
 
     parser = argparse.ArgumentParser(
-        description="ProtoBridge v1.0: Real-Time Full-Duplex Tactical Translator"
+        description="Ignait v1.0: Real-Time Full-Duplex Tactical Translator"
     )
     parser.add_argument(
         "--config",
@@ -130,7 +130,7 @@ def main() -> None:
         raise RuntimeError("No se pudo resolver el Bus Loopback de compañeros.")
 
     print("=" * 88)
-    print(" PROTOBRIDGE v1.0 - TRADUCTOR TÁCTICO FULL-DUPLEX (CONFIGURACIÓN CARGADA)")
+    print(" IGNAIT v1.0 - TRADUCTOR TÁCTICO FULL-DUPLEX (CONFIGURACIÓN CARGADA)")
     print("=" * 88)
     print(f" [FLUJO 1 - TX ({cfg.my_source_lang.upper()} -> {cfg.my_target_lang.upper()})]")
     print(f"   Micrófono Físico : {mic.name}")
@@ -160,10 +160,10 @@ def main() -> None:
     tts = KokoroTTSEngine(models_dir=models_dir, default_voice=cfg.my_voice_profile)
 
     rb_mic = SPSCRingBuffer(
-        name="protobridge_mic_duplex", capacity_seconds=30.0, sample_rate=16000, create=True
+        name="ignait_mic_duplex", capacity_seconds=30.0, sample_rate=16000, create=True
     )
     rb_team = SPSCRingBuffer(
-        name="protobridge_team_duplex", capacity_seconds=30.0, sample_rate=16000, create=True
+        name="ignait_team_duplex", capacity_seconds=30.0, sample_rate=16000, create=True
     )
 
     media_buffer = MediaLookaheadBuffer(
@@ -365,7 +365,7 @@ def main() -> None:
             time.sleep(0.012)
 
     except KeyboardInterrupt:
-        print("\n\n [Cerrando] Apagando enlace ProtoBridge de forma segura...")
+        print("\n\n [Cerrando] Apagando enlace Ignait de forma segura...")
     finally:
         hotkeys.stop()
         executor.shutdown(wait=False)

@@ -18,13 +18,13 @@ import numpy as np
 from numpy.typing import NDArray
 import soxr
 
-from protobridge.config import AppConfig
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker, SpeakerProfile
-from protobridge.media.speaker_bank import FEMALE_PRESET_POOL, MediaSpeakerVoiceBank
-from protobridge.media.stream_buffer import InMemoryAudioRingBuffer
-from protobridge.media.worker_client import XttsWorkerClient
-from protobridge.media.ws_protocol import OPCODE_BINARY, OPCODE_TEXT, WebSocketConnection
-from protobridge.vad.silero import SileroVADSegmenter
+from ignait.config import AppConfig
+from ignait.diarization.speaker_id import OnlineSpeakerTracker, SpeakerProfile
+from ignait.media.speaker_bank import FEMALE_PRESET_POOL, MediaSpeakerVoiceBank
+from ignait.media.stream_buffer import InMemoryAudioRingBuffer
+from ignait.media.worker_client import XttsWorkerClient
+from ignait.media.ws_protocol import OPCODE_BINARY, OPCODE_TEXT, WebSocketConnection
+from ignait.vad.silero import SileroVADSegmenter
 
 
 def encode_wav_s16le_b64(pcm_f32: NDArray[np.float32], sample_rate: int) -> str:

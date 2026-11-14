@@ -4,19 +4,19 @@ import time
 import unittest
 import numpy as np
 
-from protobridge.audio.streams import (
+from ignait.audio.streams import (
     TACTICAL_CHIRP_PCM,
     AsyncOutputWorker,
     PlaybackItem,
     generate_tactical_chirp,
 )
-from protobridge.config import DEFAULT_GAMING_GLOSSARY, AppConfig
-from protobridge.control.hotkeys import GlobalHotkeyListener, parse_hotkey_spec
-from protobridge.mt.translator import apply_glossary, compile_glossary
+from ignait.config import DEFAULT_GAMING_GLOSSARY, AppConfig
+from ignait.control.hotkeys import GlobalHotkeyListener, parse_hotkey_spec
+from ignait.mt.translator import apply_glossary, compile_glossary
 
 
 class TestTacticalFeatures(unittest.TestCase):
-    """Suite de validación operativa y unitaria para las características tácticas de ProtoBridge."""
+    """Suite de validación operativa y unitaria para las características tácticas de Ignait."""
 
     def test_global_hotkey_state_transitions_and_callbacks(self) -> None:
         """Valida transiciones de estado de Mute TX/RX y PTT sin bloquear el hilo."""

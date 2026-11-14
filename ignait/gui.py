@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import base64
 from concurrent.futures import ThreadPoolExecutor
@@ -30,31 +30,31 @@ import zipfile
 import pyaudiowpatch as pyaudio
 import soxr
 
-from protobridge.audio.devices import AudioEndpoint, WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import (
+from ignait.audio.devices import AudioEndpoint, WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import (
     AsyncOutputWorker,
     MediaLookaheadBuffer,
     TACTICAL_CHIRP_PCM,
     WASAPIInputStream,
 )
-from protobridge.config import AppConfig
-from protobridge.control.hotkeys import GlobalHotkeyListener
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker, WESPEAKER_ONNX_URL
-from protobridge.media.session import MediaPipelineService, encode_wav_s16le_b64
-from protobridge.media.worker_client import XttsWorkerClient
-from protobridge.media.ws_protocol import WebSocketConnection, compute_ws_accept_key
-from protobridge.mt.translator import NLLB_CT2_REPO, NLLB_TOKENIZER_REPO, TacticalTranslatorEngine
-from protobridge.paths import (
+from ignait.config import AppConfig
+from ignait.control.hotkeys import GlobalHotkeyListener
+from ignait.diarization.speaker_id import OnlineSpeakerTracker, WESPEAKER_ONNX_URL
+from ignait.media.session import MediaPipelineService, encode_wav_s16le_b64
+from ignait.media.worker_client import XttsWorkerClient
+from ignait.media.ws_protocol import WebSocketConnection, compute_ws_accept_key
+from ignait.mt.translator import NLLB_CT2_REPO, NLLB_TOKENIZER_REPO, TacticalTranslatorEngine
+from ignait.paths import (
     get_browser_extension_dir,
     get_models_dir,
     get_ui_html_path,
     get_xtts_models_dir,
 )
-from protobridge.stt.whisper_engine import WhisperTranslatorEngine
-from protobridge.system.os_priority import set_high_process_priority
-from protobridge.tts.kokoro_engine import KokoroTTSEngine, ensure_kokoro_assets
-from protobridge.vad.silero import SileroVADSegmenter, ensure_silero_model
+from ignait.stt.whisper_engine import WhisperTranslatorEngine
+from ignait.system.os_priority import set_high_process_priority
+from ignait.tts.kokoro_engine import KokoroTTSEngine, ensure_kokoro_assets
+from ignait.vad.silero import SileroVADSegmenter, ensure_silero_model
 
 from huggingface_hub import hf_hub_download, snapshot_download
 
@@ -490,10 +490,10 @@ class StitchBackendController:
             stt, mt, tts = self._ensure_ai_engines()
 
             rb_mic = SPSCRingBuffer(
-                name="protobridge_stitch_mic", capacity_seconds=30.0, sample_rate=16000, create=True
+                name="ignait_stitch_mic", capacity_seconds=30.0, sample_rate=16000, create=True
             )
             rb_team = SPSCRingBuffer(
-                name="protobridge_stitch_team", capacity_seconds=30.0, sample_rate=16000, create=True
+                name="ignait_stitch_team", capacity_seconds=30.0, sample_rate=16000, create=True
             )
 
             self.sync_media_mode()
@@ -956,7 +956,7 @@ class StitchHTTPHandler(BaseHTTPRequestHandler):
         if origin is not None and not _is_allowed_origin_header(origin):
             return False
 
-        client_hdr = (self.headers.get("X-ProtoBridge-Client") or "").strip()
+        client_hdr = (self.headers.get("X-Ignait-Client") or "").strip()
         is_ext = (client_hdr == "BrowserExtension") or (
             origin is not None
             and _is_allowed_origin_header(origin)
@@ -1012,7 +1012,7 @@ class StitchHTTPHandler(BaseHTTPRequestHandler):
         self.send_response(204)
         self._send_cors_headers_if_allowed()
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-ProtoBridge-Client")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Ignait-Client")
         self.send_header("Content-Length", "0")
         self.end_headers()
 
@@ -1056,7 +1056,7 @@ class StitchHTTPHandler(BaseHTTPRequestHandler):
             self._send_json(
                 {
                     "ok": True,
-                    "app": "ProtoBridge",
+                    "app": "Ignait",
                     "running": CONTROLLER.running,
                     "source_lang": CONTROLLER.config.teammate_source_lang,
                     "target_lang": CONTROLLER.config.teammate_target_lang,
@@ -1256,7 +1256,7 @@ def main() -> None:
         server = ThreadingHTTPServer(("127.0.0.1", port), StitchHTTPHandler)
 
     url = f"http://127.0.0.1:{port}"
-    print(f" [ProtoBridge Studio - Stitch Edition] Servidor activo en {url}")
+    print(f" [Ignait Studio - Stitch Edition] Servidor activo en {url}")
 
     server_thread: threading.Thread | None = None
     tray_icon = None
@@ -1269,7 +1269,7 @@ def main() -> None:
         )
         server_thread.start()
         window = webview.create_window(
-            "ProtoBridge Studio",
+            "Ignait Studio",
             url,
             width=1280,
             height=840,
@@ -1291,11 +1291,11 @@ def main() -> None:
 
         window.events.minimized += _on_minimized
         tray_icon = pystray.Icon(
-            "ProtoBridge",
+            "Ignait",
             _build_tray_icon_image(),
-            "ProtoBridge Studio",
+            "Ignait Studio",
             menu=pystray.Menu(
-                pystray.MenuItem("Abrir ProtoBridge", _show_window, default=True),
+                pystray.MenuItem("Abrir Ignait", _show_window, default=True),
                 pystray.MenuItem("Salir", _quit_app),
             ),
         )

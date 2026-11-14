@@ -1,4 +1,4 @@
-class ProtoBridgeCaptureProcessor extends AudioWorkletProcessor {
+class IgnaitCaptureProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
     const processorOptions = (options && options.processorOptions) || {};
@@ -71,4 +71,4 @@ class ProtoBridgeCaptureProcessor extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor("protobridge-capture-processor", ProtoBridgeCaptureProcessor);
+registerProcessor("ignait-capture-processor", IgnaitCaptureProcessor);

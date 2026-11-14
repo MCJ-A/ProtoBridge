@@ -3,13 +3,13 @@
 from PyInstaller.utils.hooks import collect_all, collect_dynamic_libs
 
 datas = [
-    ("protobridge/ui_stitch.html", "protobridge"),
-    ("protobridge/media/xtts_worker.py", "protobridge/media"),
+    ("ignait/ui_stitch.html", "ignait"),
+    ("ignait/media/xtts_worker.py", "ignait/media"),
     ("browser_extension", "browser_extension"),
 ]
 binaries = []
 hiddenimports = [
-    "protobridge.paths",
+    "ignait.paths",
     "pyaudiowpatch",
     "soxr",
     "webview",
@@ -48,7 +48,7 @@ for cuda_pkg in ("nvidia.cublas", "nvidia.cudnn"):
         pass
 
 a = Analysis(
-    ["protobridge/gui.py"],
+    ["ignait/gui.py"],
     pathex=["."],
     binaries=binaries,
     datas=datas,
@@ -66,7 +66,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="ProtoBridge",
+    name="Ignait",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -80,5 +80,5 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=False,
-    name="ProtoBridge",
+    name="Ignait",
 )

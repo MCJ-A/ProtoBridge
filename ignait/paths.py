@@ -29,7 +29,7 @@ def get_xtts_worker_script() -> Path:
     """Resuelve la ruta física de xtts_worker.py en desarrollo o empaquetado PyInstaller."""
     meipass = getattr(sys, "_MEIPASS", None)
     if is_frozen() and meipass:
-        candidate = Path(meipass) / "protobridge" / "media" / "xtts_worker.py"
+        candidate = Path(meipass) / "ignait" / "media" / "xtts_worker.py"
         if candidate.exists():
             return candidate
     return Path(__file__).resolve().parent / "media" / "xtts_worker.py"
@@ -37,7 +37,7 @@ def get_xtts_worker_script() -> Path:
 
 def get_media_tts_python() -> Path | None:
     """Resuelve el intérprete Python 3.12.8 aislado (.venv-media-tts) para Media TTS GPU."""
-    env_override = os.environ.get("PROTOBRIDGE_MEDIA_PYTHON", "").strip()
+    env_override = os.environ.get("IGNAIT_MEDIA_PYTHON", "").strip()
     if env_override:
         p = Path(env_override)
         if p.exists():
@@ -70,14 +70,14 @@ def get_config_path() -> Path:
 def get_ui_html_path() -> Path:
     meipass = getattr(sys, "_MEIPASS", None)
     if is_frozen() and meipass:
-        candidate = Path(meipass) / "protobridge" / "ui_stitch.html"
+        candidate = Path(meipass) / "ignait" / "ui_stitch.html"
         if candidate.exists():
             return candidate
     return Path(__file__).resolve().parent / "ui_stitch.html"
 
 
 def get_browser_extension_dir() -> Path:
-    """Devuelve la carpeta descomprimida de la extensión Chrome/Edge de ProtoBridge."""
+    """Devuelve la carpeta descomprimida de la extensión Chrome/Edge de Ignait."""
     if is_frozen():
         ext_next = get_app_dir() / "browser_extension"
         if ext_next.exists():

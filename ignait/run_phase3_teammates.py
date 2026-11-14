@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -6,19 +6,19 @@ from pathlib import Path
 import time
 import pyaudiowpatch as pyaudio
 
-from protobridge.audio.devices import AudioEndpoint, WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
-from protobridge.mt.translator import TacticalTranslatorEngine
-from protobridge.stt.whisper_engine import WhisperTranslatorEngine
-from protobridge.tts.kokoro_engine import KokoroTTSEngine
-from protobridge.vad.silero import SileroVADSegmenter
+from ignait.audio.devices import AudioEndpoint, WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import WASAPIInputStream, WASAPIOutputPlayer
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.mt.translator import TacticalTranslatorEngine
+from ignait.stt.whisper_engine import WhisperTranslatorEngine
+from ignait.tts.kokoro_engine import KokoroTTSEngine
+from ignait.vad.silero import SileroVADSegmenter
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="ProtoBridge Fase 3: Flujo 2 (Compañeros en Inglés -> Español Multi-Voz 3D)"
+        description="Ignait Fase 3: Flujo 2 (Compañeros en Inglés -> Español Multi-Voz 3D)"
     )
     parser.add_argument(
         "--test-mic",
@@ -41,7 +41,7 @@ def main() -> None:
         raise RuntimeError("No se encontró el dispositivo de entrada para el Flujo 2.")
 
     print("=" * 84)
-    print(" PROTOBRIDGE - FASE 3: TRADUCTOR DE COMPAÑEROS MULTI-VOZ 3D (INGLES -> ESPAÑOL)")
+    print(" IGNAIT - FASE 3: TRADUCTOR DE COMPAÑEROS MULTI-VOZ 3D (INGLES -> ESPAÑOL)")
     print("=" * 84)
     print(f" [Fuente Captura]     : {source_endpoint.name}")
     print(f" [Salida Auriculares] : {topology.physical_headphones.name}")
@@ -55,7 +55,7 @@ def main() -> None:
     tts = KokoroTTSEngine(models_dir=models_dir)
 
     rb_in = SPSCRingBuffer(
-        name="protobridge_team_phase3", capacity_seconds=30.0, sample_rate=16000, create=True
+        name="ignait_team_phase3", capacity_seconds=30.0, sample_rate=16000, create=True
     )
     pa = pyaudio.PyAudio()
 

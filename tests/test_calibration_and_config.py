@@ -5,8 +5,8 @@ from pathlib import Path
 import unittest
 import numpy as np
 
-from protobridge.config import AppConfig
-from protobridge.diarization.speaker_id import OnlineSpeakerTracker
+from ignait.config import AppConfig
+from ignait.diarization.speaker_id import OnlineSpeakerTracker
 
 
 class TestCalibrationAndConfig(unittest.TestCase):

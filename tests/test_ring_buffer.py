@@ -1,8 +1,8 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import unittest
 import numpy as np
-from protobridge.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.ring_buffer import SPSCRingBuffer
 
 
 class TestSPSCRingBuffer(unittest.TestCase):

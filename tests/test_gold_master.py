@@ -12,18 +12,18 @@ import unittest
 from unittest.mock import MagicMock, patch
 import numpy as np
 
-from protobridge.audio.devices import AudioEndpoint
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import (
+from ignait.audio.devices import AudioEndpoint
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import (
     PRECALCULATED_CHIRPS,
     TARGET_INTERNAL_RATE,
     AsyncOutputWorker,
     WASAPIInputStream,
     WASAPIOutputPlayer,
 )
-from protobridge.gui import CONTROLLER, StitchHTTPHandler
-from protobridge.system.os_priority import mmcss_pro_audio
-from protobridge.tts.kokoro_engine import CONTRACTION_PATTERNS
+from ignait.gui import CONTROLLER, StitchHTTPHandler
+from ignait.system.os_priority import mmcss_pro_audio
+from ignait.tts.kokoro_engine import CONTRACTION_PATTERNS
 
 
 def _dummy_endpoint(index: int = 1, rate: int = 16000, channels: int = 1) -> AudioEndpoint:
@@ -85,7 +85,7 @@ class TestGoldMasterSystems(unittest.TestCase):
             finally:
                 exited.set()
 
-        with patch("protobridge.audio.streams.mmcss_pro_audio", side_effect=fake_mmcss):
+        with patch("ignait.audio.streams.mmcss_pro_audio", side_effect=fake_mmcss):
             worker = AsyncOutputWorker(player=None)
             self.assertTrue(entered.wait(timeout=1.0))
             worker.close()
@@ -103,7 +103,7 @@ class TestGoldMasterSystems(unittest.TestCase):
         ep = _dummy_endpoint(rate=48000, channels=2)
         player = WASAPIOutputPlayer(pa=mock_pa, endpoint=ep)
         try:
-            with patch("protobridge.audio.streams.soxr.resample") as mock_resample:
+            with patch("ignait.audio.streams.soxr.resample") as mock_resample:
                 ok = player.play_precomputed_chirp(0.35)
                 self.assertTrue(ok)
                 mock_resample.assert_not_called()
@@ -221,7 +221,7 @@ class TestGoldMasterSystems(unittest.TestCase):
         player = WASAPIOutputPlayer(pa=mock_pa, endpoint=ep)
         try:
             pcm = np.ones(160, dtype=np.float32) * 0.2
-            with patch("protobridge.audio.streams.time.sleep") as mock_sleep:
+            with patch("ignait.audio.streams.time.sleep") as mock_sleep:
                 with self.assertRaises(OSError):
                     player.play_pcm(pcm, source_rate=16000)
 
@@ -257,7 +257,7 @@ class TestGoldMasterSystems(unittest.TestCase):
             with inp._lock:
                 inp._stream = inp._open_stream()
 
-            with patch("protobridge.audio.streams.time.sleep") as mock_sleep:
+            with patch("ignait.audio.streams.time.sleep") as mock_sleep:
                 recovered = inp.check_and_recover()
                 self.assertTrue(recovered)
                 delays = [call[0][0] for call in mock_sleep.call_args_list]
@@ -331,7 +331,7 @@ class TestGoldMasterSystems(unittest.TestCase):
             self.assertEqual(resp.status, 403)
             conn.close()
 
-            # 6. POST sin X-ProtoBridge-Client: WebUI -> 403
+            # 6. POST sin X-Ignait-Client: WebUI -> 403
             conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2.0)
             conn.request(
                 "POST",
@@ -344,7 +344,7 @@ class TestGoldMasterSystems(unittest.TestCase):
             self.assertEqual(resp.status, 403)
             conn.close()
 
-            # 7. POST con X-ProtoBridge-Client: WebUI y JSON malformado -> 400
+            # 7. POST con X-Ignait-Client: WebUI y JSON malformado -> 400
             conn = http.client.HTTPConnection("127.0.0.1", port, timeout=2.0)
             conn.request(
                 "POST",
@@ -352,7 +352,7 @@ class TestGoldMasterSystems(unittest.TestCase):
                 body=b"{invalid json",
                 headers={
                     "Host": f"127.0.0.1:{port}",
-                    "X-ProtoBridge-Client": "WebUI",
+                    "X-Ignait-Client": "WebUI",
                     "Content-Type": "application/json",
                 },
             )
@@ -372,7 +372,7 @@ class TestGoldMasterSystems(unittest.TestCase):
                         "Host": f"localhost:{port}",
                         "Origin": f"http://localhost:{port}",
                         "Sec-Fetch-Site": "same-origin",
-                        "X-ProtoBridge-Client": "WebUI",
+                        "X-Ignait-Client": "WebUI",
                         "Content-Type": "application/json",
                     },
                 )
@@ -391,7 +391,7 @@ class TestGoldMasterSystems(unittest.TestCase):
                     body=b'{"action": "reset_squad"}',
                     headers={
                         "Host": f"127.0.0.1:{port}",
-                        "X-ProtoBridge-Client": "WebUI",
+                        "X-Ignait-Client": "WebUI",
                         "Content-Type": "application/json",
                     },
                 )
@@ -408,7 +408,7 @@ class TestGoldMasterSystems(unittest.TestCase):
 
 class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
     def test_stream_state_transitions(self) -> None:
-        from protobridge.audio.streams import (
+        from ignait.audio.streams import (
             StreamState,
             WASAPIInputStream,
             WASAPIOutputPlayer,
@@ -424,14 +424,14 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
 
         good_stream.write.side_effect = OSError(-9999, "Unanticipated host error")
         fake_pa.open.side_effect = [OSError(-9999, "Unanticipated host error"), reopened_stream]
-        with patch("protobridge.audio.streams.time.sleep"):
+        with patch("ignait.audio.streams.time.sleep"):
             player._write_bytes_with_recovery(b"\x00" * 16)
         self.assertEqual(player.state, StreamState.RUNNING)
         reopened_stream.write.assert_called_once()
 
         reopened_stream.write.side_effect = OSError(-9996, "Invalid device")
         fake_pa.open.side_effect = OSError(-9996, "Invalid device")
-        with patch("protobridge.audio.streams.time.sleep"):
+        with patch("ignait.audio.streams.time.sleep"):
             with self.assertRaises(OSError):
                 player._write_bytes_with_recovery(b"\x00" * 16)
         self.assertEqual(player.state, StreamState.FAULTED)
@@ -450,7 +450,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
 
             fake_in_stream.is_active.side_effect = OSError(-2004287484, "AUDCLNT_E_DEVICE_INVALIDATED")
             fake_pa_in.open.side_effect = OSError(-2004287484, "AUDCLNT_E_DEVICE_INVALIDATED")
-            with patch("protobridge.audio.streams.time.sleep"):
+            with patch("ignait.audio.streams.time.sleep"):
                 with self.assertRaises(OSError):
                     in_stream.check_and_recover()
             self.assertEqual(in_stream.state, StreamState.FAULTED)
@@ -459,7 +459,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
             rb.close()
 
     def test_hotkey_reset_squad_edge_trigger(self) -> None:
-        from protobridge.control.hotkeys import GlobalHotkeyListener
+        from ignait.control.hotkeys import GlobalHotkeyListener
 
         triggered: list[bool] = []
         listener = GlobalHotkeyListener(
@@ -485,11 +485,11 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
 
     def test_speaker_tracker_reset_squad(self) -> None:
         import tempfile
-        from protobridge.diarization.speaker_id import OnlineSpeakerTracker
+        from ignait.diarization.speaker_id import OnlineSpeakerTracker
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch("protobridge.diarization.speaker_id._ensure_speaker_model", return_value=Path(tmpdir) / "spk.onnx"), \
-                 patch("protobridge.diarization.speaker_id.ort.InferenceSession"):
+            with patch("ignait.diarization.speaker_id._ensure_speaker_model", return_value=Path(tmpdir) / "spk.onnx"), \
+                 patch("ignait.diarization.speaker_id.ort.InferenceSession"):
                 tracker = OnlineSpeakerTracker(models_dir=Path(tmpdir), max_speakers=4)
                 tracker._centroids.append(np.ones((256,), dtype=np.float32))
                 tracker._assigned_slots.append(0)
@@ -504,11 +504,11 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
 
     def test_cross_vad_gating_15db_and_hold(self) -> None:
         import tempfile
-        from protobridge.vad.silero import SileroVADSegmenter, _CROSS_VAD_GAIN_15DB
+        from ignait.vad.silero import SileroVADSegmenter, _CROSS_VAD_GAIN_15DB
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            with patch("protobridge.vad.silero.ensure_silero_model", return_value=Path(tmpdir) / "vad.onnx"), \
-                 patch("protobridge.vad.silero.ort.InferenceSession"):
+            with patch("ignait.vad.silero.ensure_silero_model", return_value=Path(tmpdir) / "vad.onnx"), \
+                 patch("ignait.vad.silero.ort.InferenceSession"):
                 vad = SileroVADSegmenter(
                     models_dir=Path(tmpdir),
                     speech_threshold=0.50,
@@ -546,8 +546,8 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
     def test_tactical_glossary_config_and_update(self) -> None:
         import json
         import tempfile
-        from protobridge.config import AppConfig
-        from protobridge.mt.translator import TacticalTranslatorEngine, apply_glossary
+        from ignait.config import AppConfig
+        from ignait.mt.translator import TacticalTranslatorEngine, apply_glossary
 
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg_path = Path(tmpdir) / "config.json"
@@ -564,7 +564,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
             self.assertEqual(apply_glossary("helldrop", engine._active_glossary), "Despliegue Infernal")
 
     def test_russian_tts_routing(self) -> None:
-        from protobridge.tts.kokoro_engine import KokoroTTSEngine
+        from ignait.tts.kokoro_engine import KokoroTTSEngine
 
         engine = KokoroTTSEngine.__new__(KokoroTTSEngine)
         engine.models_dir = Path("models")
@@ -580,7 +580,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
         fake_ru.synthesize.assert_called_once_with("Привет", speed=1.1)
 
     def test_media_lookahead_buffer_delay_and_smart_ducking(self) -> None:
-        from protobridge.audio.streams import MediaLookaheadBuffer
+        from ignait.audio.streams import MediaLookaheadBuffer
 
         buf = MediaLookaheadBuffer(
             sample_rate=16000,
@@ -612,7 +612,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
 
     def test_async_output_worker_media_mode_mixes_ducked_background(self) -> None:
         import time
-        from protobridge.audio.streams import AsyncOutputWorker, MediaLookaheadBuffer
+        from ignait.audio.streams import AsyncOutputWorker, MediaLookaheadBuffer
 
         media_buf = MediaLookaheadBuffer(
             sample_rate=16000,
@@ -676,14 +676,14 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
                     "Host": f"127.0.0.1:{port}",
                     "Origin": ext_origin,
                     "Sec-Fetch-Site": "cross-site",
-                    "X-ProtoBridge-Client": "BrowserExtension",
+                    "X-Ignait-Client": "BrowserExtension",
                 },
             )
             resp = conn.getresponse()
             ping_body = json.loads(resp.read().decode("utf-8"))
             self.assertEqual(resp.status, 200)
             self.assertTrue(ping_body.get("ok"))
-            self.assertEqual(ping_body.get("app"), "ProtoBridge")
+            self.assertEqual(ping_body.get("app"), "Ignait")
             self.assertEqual(resp.getheader("Access-Control-Allow-Origin"), ext_origin)
             conn.close()
 
@@ -696,7 +696,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
                 headers={
                     "Host": f"127.0.0.1:{port}",
                     "Origin": ext_origin,
-                    "X-ProtoBridge-Client": "BrowserExtension",
+                    "X-Ignait-Client": "BrowserExtension",
                     "Content-Type": "application/json",
                 },
             )
@@ -714,7 +714,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
                 headers={
                     "Host": f"127.0.0.1:{port}",
                     "Origin": "https://evil.com",
-                    "X-ProtoBridge-Client": "BrowserExtension",
+                    "X-Ignait-Client": "BrowserExtension",
                     "Content-Type": "application/json",
                 },
             )
@@ -753,7 +753,7 @@ class TestSquadAndCrossVadGoldMaster(unittest.TestCase):
                         "Host": f"127.0.0.1:{port}",
                         "Origin": ext_origin,
                         "Sec-Fetch-Site": "cross-site",
-                        "X-ProtoBridge-Client": "BrowserExtension",
+                        "X-Ignait-Client": "BrowserExtension",
                         "Content-Type": "application/json",
                     },
                 )

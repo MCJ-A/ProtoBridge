@@ -362,7 +362,7 @@
         wsErrorCount += 1;
         if (settings.enabled) {
           currentOverlayStatus = "ESPERANDO APP";
-          updateOverlayBadge("ABRE PROTOBRIDGE");
+          updateOverlayBadge("ABRE IGNAIT");
         }
         return;
       }
@@ -1022,7 +1022,7 @@
         .addModule(workletUrl)
         .then(() => {
           if (boundVideos.get(video) !== graph) return;
-          const workletNode = new AudioWorkletNode(ctx, "protobridge-capture-processor", {
+          const workletNode = new AudioWorkletNode(ctx, "ignait-capture-processor", {
             numberOfInputs: 1,
             numberOfOutputs: 1,
             processorOptions: {
@@ -1356,7 +1356,7 @@
       inFlightCount = Math.max(0, inFlightCount - 1);
       if (chrome.runtime.lastError || !response || !response.ok) {
         currentOverlayStatus = "ESPERANDO APP";
-        updateOverlayBadge("ABRE PROTOBRIDGE");
+        updateOverlayBadge("ABRE IGNAIT");
         return;
       }
       const res = response.data;

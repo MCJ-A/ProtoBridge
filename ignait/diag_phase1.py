@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import time
 import pyaudiowpatch as pyaudio
 
-from protobridge.audio.devices import WASAPIDeviceManager
-from protobridge.audio.ring_buffer import SPSCRingBuffer
-from protobridge.audio.streams import WASAPIInputStream, VAD_FRAME_SAMPLES
+from ignait.audio.devices import WASAPIDeviceManager
+from ignait.audio.ring_buffer import SPSCRingBuffer
+from ignait.audio.streams import WASAPIInputStream, VAD_FRAME_SAMPLES
 
 
 def run_diagnostics() -> None:
@@ -15,7 +15,7 @@ def run_diagnostics() -> None:
         topology = manager.auto_detect_topology()
 
         print("=" * 78)
-        print(" PROTOBRIDGE - FASE 1: DIAGNOSTICO DE BUSES WASAPI (WINDOWS)")
+        print(" IGNAIT - FASE 1: DIAGNOSTICO DE BUSES WASAPI (WINDOWS)")
         print("=" * 78)
         for ep in endpoints:
             flags: list[str] = []
@@ -48,7 +48,7 @@ def run_diagnostics() -> None:
         print("\n Iniciando prueba de captura WASAPI -> SPSC RingBuffer (16 kHz) durante 5 segundos...")
         print(" Habla por tu microfono para verificar el medidor RMS y el Pre-Roll de 300 ms:\n")
 
-        rb = SPSCRingBuffer(name="protobridge_mic_test", capacity_seconds=15.0, sample_rate=16000, create=True)
+        rb = SPSCRingBuffer(name="ignait_mic_test", capacity_seconds=15.0, sample_rate=16000, create=True)
         pa = pyaudio.PyAudio()
         stream = WASAPIInputStream(pa=pa, endpoint=topology.physical_mic, ring_buffer=rb)
 
